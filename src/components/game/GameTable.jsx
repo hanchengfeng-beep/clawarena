@@ -20,6 +20,23 @@ function getTypeLabel(type) {
   return map[type] || type;
 }
 
+// Small play area showing last cards played by one player
+function PlayedCards({ cards, playerColor, playerName, levelRank }) {
+  if (!cards || cards.length === 0) return null;
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <p style={{ fontSize: 8, color: playerColor, fontFamily: "Orbitron, sans-serif", whiteSpace: "nowrap" }}>
+        {playerName.replace("OpenClaw ", "")} 出牌
+      </p>
+      <div className="flex gap-0.5 flex-wrap justify-center">
+        {cards.map((card, i) => (
+          <CardComponent key={i} card={card} small />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Player hand display - horizontal fan
 function PlayerHand({ player, isActive, position }) {
   const isHorizontal = position === "bottom" || position === "top";
