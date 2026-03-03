@@ -24,48 +24,62 @@ function getTypeLabel(type) {
 function PlayerHand({ player, isActive, position }) {
   const isHorizontal = position === "bottom" || position === "top";
 
+  // Player info badge
+  const badge = (
+    <div className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all duration-300 ${isActive ? "glow-cyan" : ""}`} style={{
+      background: isActive ? "rgba(0,245,255,0.12)" : "rgba(10,14,26,0.8)",
+      border: `1px solid ${isActive ? player.color : "rgba(255,255,255,0.08)"}`,
+      backdropFilter: "blur(8px)",
+      opacity: player.finishedAt !== null ? 0.45 : 1,
+      whiteSpace: "nowrap",
+    }}>
+      <span style={{ fontSize: 16 }}>{player.avatar}</span>
+      <div>
+        <p style={{ color: player.color, fontFamily: "Orbitron, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.5px" }}>
+          {player.name.replace("OpenClaw ", "")}
+        </p>
+        <p style={{ color: "#64748b", fontSize: 9 }}>
+          {player.finishedAt !== null
+            ? ["🥇 1st", "🥈 2nd", "🥉 3rd", "❌ 4th"][player.finishedAt]
+            : `${player.hand.length} 张`}
+        </p>
+      </div>
+      {isActive && (
+        <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: player.color, boxShadow: `0 0 6px ${player.color}` }} />
+      )}
+    </div>
+  );
+
+  // All positions use horizontal wrap layout for readability
+  const cards = (
+    <div className="flex flex-wrap justify-center gap-0.5" style={{ maxWidth: position === "left" || position === "right" ? 220 : 500 }}>
+      {player.hand.map((card, i) => (
+        <CardComponent key={`${card.id}-${i}`} card={card} small />
+      ))}
+    </div>
+  );
+
+  if (position === "left") {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        {badge}
+        {cards}
+      </div>
+    );
+  }
+  if (position === "right") {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        {badge}
+        {cards}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center gap-2">
-      {/* Info badge */}
-      <div className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all duration-300 ${isActive ? "glow-cyan" : ""}`} style={{
-        background: isActive ? "rgba(0,245,255,0.12)" : "rgba(10,14,26,0.8)",
-        border: `1px solid ${isActive ? player.color : "rgba(255,255,255,0.08)"}`,
-        backdropFilter: "blur(8px)",
-        opacity: player.finishedAt !== null ? 0.45 : 1,
-      }}>
-        <span style={{ fontSize: 16 }}>{player.avatar}</span>
-        <div>
-          <p style={{ color: player.color, fontFamily: "Orbitron, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.5px" }}>
-            {player.name.replace("OpenClaw ", "")}
-          </p>
-          <p style={{ color: "#64748b", fontSize: 9 }}>
-            {player.finishedAt !== null
-              ? ["🥇 1st", "🥈 2nd", "🥉 3rd", "❌ 4th"][player.finishedAt]
-              : `${player.hand.length} 张`}
-          </p>
-        </div>
-        {isActive && (
-          <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: player.color, boxShadow: `0 0 6px ${player.color}` }} />
-        )}
-      </div>
-
-      {/* Cards */}
-      {isHorizontal ? (
-        <div className="flex flex-wrap justify-center gap-0.5" style={{ maxWidth: 480 }}>
-          {player.hand.map((card, i) => (
-            <CardComponent key={`${card.id}-${i}`} card={card} small />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-0.5 items-center" style={{ maxHeight: 220, overflow: "hidden" }}>
-          {player.hand.slice(0, 13).map((card, i) => (
-            <CardComponent key={`${card.id}-${i}`} card={card} small />
-          ))}
-          {player.hand.length > 13 && (
-            <span style={{ color: "#64748b", fontSize: 9, fontFamily: "Orbitron, sans-serif" }}>+{player.hand.length - 13}</span>
-          )}
-        </div>
-      )}
+      {badge}
+      {cards}
     </div>
   );
 }
