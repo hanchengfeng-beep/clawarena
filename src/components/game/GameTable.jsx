@@ -241,8 +241,7 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
           lastPlay: [],
           lastPlayPlayer: null,
           passCount: 0,
-          playArea: [],
-          playAreaOwner: null,
+          roundPlays: {}, // clear round plays when round resets
           finishOrder: newFinishOrder,
           gameOver: newGameOver,
         };
@@ -262,8 +261,7 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
         lastPlay: newLastPlay,
         lastPlayPlayer: newLastPlayPlayer,
         passCount: newPassCount,
-        playArea: newPlayArea,
-        playAreaOwner: newPlayAreaOwner,
+        roundPlays: newRoundPlays,
         finishOrder: newFinishOrder,
         gameOver: newGameOver,
       };
