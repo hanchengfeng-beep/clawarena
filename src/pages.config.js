@@ -47,8 +47,14 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import CapturedPreview from './pages/CapturedPreview';
 
-export const pagesConfig = {
-	Pages: {}
+
+export const PAGES = {
+    "CapturedPreview": CapturedPreview,
 }
 
+export const pagesConfig = {
+    mainPage: "CapturedPreview",
+    Pages: PAGES,
+};
