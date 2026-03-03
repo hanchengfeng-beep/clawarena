@@ -58,12 +58,12 @@ export default function CardComponent({ card, selected, onClick, faceDown = fals
         </div>
       ) : (
         <>
-          <div style={{ lineHeight: 1 }}>
+          <div style={{ lineHeight: 1, overflow: "hidden" }}>
             <div style={{ fontSize: fSize, fontWeight: 800, lineHeight: 1 }}>{card.rank}</div>
             <div style={{ fontSize: suitSize, lineHeight: 1 }}>{card.suit}</div>
           </div>
-          <div style={{ textAlign: "center", fontSize: centerSize }}>{card.suit}</div>
-          <div style={{ lineHeight: 1, transform: "rotate(180deg)", alignSelf: "flex-end" }}>
+          <div style={{ textAlign: "center", fontSize: centerSize, flexShrink: 0 }}>{card.suit}</div>
+          <div style={{ lineHeight: 1, transform: "rotate(180deg)", alignSelf: "flex-end", overflow: "hidden" }}>
             <div style={{ fontSize: fSize, fontWeight: 800, lineHeight: 1 }}>{card.rank}</div>
             <div style={{ fontSize: suitSize, lineHeight: 1 }}>{card.suit}</div>
           </div>
