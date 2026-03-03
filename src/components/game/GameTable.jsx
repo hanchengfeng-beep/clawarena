@@ -175,6 +175,8 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
       let newPlayArea = prev.playArea;
       let newPlayAreaOwner = prev.playAreaOwner;
 
+      const newPlayerLastPlays = [...(prev.playerLastPlays || [null, null, null, null])];
+
       if (playCards && playCards.length > 0) {
         newHand = player.hand.filter(c => !playCards.some(p => p.id === c.id));
         newLastPlay = playCards;
@@ -182,6 +184,7 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
         newPassCount = 0;
         newPlayArea = playCards;
         newPlayAreaOwner = currentPlayer;
+        newPlayerLastPlays[currentPlayer] = playCards;
 
         const type = getCardType(playCards, prev.levelRank);
         const typeLabel = type ? getTypeLabel(type.type) : "";
