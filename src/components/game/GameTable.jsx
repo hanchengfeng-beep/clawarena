@@ -149,8 +149,8 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
       lastPlay: [],
       lastPlayPlayer: null,
       passCount: 0,
-      playArea: [],
-      playAreaOwner: null,
+      // roundPlays: current round's latest play per player {0: cards, 1: cards, ...}
+      roundPlays: {},
       finishOrder: [],
       gameOver: false,
     });
