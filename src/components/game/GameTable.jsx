@@ -20,23 +20,6 @@ function getTypeLabel(type) {
   return map[type] || type;
 }
 
-// Small play area showing last cards played by one player
-function PlayedCards({ cards, playerColor, playerName, levelRank }) {
-  if (!cards || cards.length === 0) return null;
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <p style={{ fontSize: 8, color: playerColor, fontFamily: "Orbitron, sans-serif", whiteSpace: "nowrap" }}>
-        {playerName.replace("OpenClaw ", "")} 出牌
-      </p>
-      <div className="flex gap-0.5 flex-wrap justify-center">
-        {cards.map((card, i) => (
-          <CardComponent key={i} card={card} small />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // Player hand display - horizontal fan
 function PlayerHand({ player, isActive, position }) {
   const isHorizontal = position === "bottom" || position === "top";
@@ -142,7 +125,6 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
       passCount: 0,
       playArea: [],
       playAreaOwner: null,
-      playerLastPlays: [null, null, null, null],
       finishOrder: [],
       gameOver: false,
     });
@@ -175,8 +157,6 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
       let newPlayArea = prev.playArea;
       let newPlayAreaOwner = prev.playAreaOwner;
 
-      const newPlayerLastPlays = [...(prev.playerLastPlays || [null, null, null, null])];
-
       if (playCards && playCards.length > 0) {
         newHand = player.hand.filter(c => !playCards.some(p => p.id === c.id));
         newLastPlay = playCards;
@@ -184,7 +164,6 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
         newPassCount = 0;
         newPlayArea = playCards;
         newPlayAreaOwner = currentPlayer;
-        newPlayerLastPlays[currentPlayer] = playCards;
 
         const type = getCardType(playCards, prev.levelRank);
         const typeLabel = type ? getTypeLabel(type.type) : "";
@@ -240,7 +219,6 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
           passCount: 0,
           playArea: [],
           playAreaOwner: null,
-          playerLastPlays: [null, null, null, null],
           finishOrder: newFinishOrder,
           gameOver: newGameOver,
         };
@@ -262,7 +240,6 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
         passCount: newPassCount,
         playArea: newPlayArea,
         playAreaOwner: newPlayAreaOwner,
-        playerLastPlays: newPlayerLastPlays,
         finishOrder: newFinishOrder,
         gameOver: newGameOver,
       };
@@ -284,8 +261,7 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
 
   if (!gameState) return <div className="text-center p-8" style={{ color: "#64748b" }}>初始化中...</div>;
 
-  const { players, currentPlayer, playArea, playAreaOwner, playerLastPlays, finishOrder, currentLevel, levelRank, gameOver } = gameState;
-  const plp = playerLastPlays || [null, null, null, null];
+  const { players, currentPlayer, playArea, playAreaOwner, finishOrder, currentLevel, levelRank, gameOver } = gameState;
 
   // Layout: [top=2, left=3, bottom=0, right=1]
   // Positions: 0=bottom, 1=right, 2=top, 3=left
@@ -336,31 +312,58 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
         {/* Game board */}
         <div className="flex-1 flex flex-col gap-3">
           {/* Top player */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex justify-center">
             <PlayerHand player={topPlayer} isActive={currentPlayer === 2 && !gameOver} position="top" />
-            <PlayedCards cards={plp[2]} playerColor={topPlayer.color} playerName={topPlayer.name} levelRank={levelRank} />
           </div>
 
           {/* Middle row: left | center | right */}
           <div className="flex items-center gap-3">
             {/* Left player */}
-            <div className="flex flex-col items-center gap-1" style={{ width: 230, flexShrink: 0 }}>
+            <div className="flex justify-center" style={{ width: 230, flexShrink: 0 }}>
               <PlayerHand player={leftPlayer} isActive={currentPlayer === 3 && !gameOver} position="left" />
-              <PlayedCards cards={plp[3]} playerColor={leftPlayer.color} playerName={leftPlayer.name} levelRank={levelRank} />
             </div>
 
-            {/* Center area - decoration + finish order */}
+            {/* Center play area */}
             <div className="flex-1 rounded-xl flex flex-col items-center justify-center gap-3 py-6" style={{
               background: "radial-gradient(ellipse at center, #0d2a1a 0%, #060d14 100%)",
               border: "1px solid rgba(0,245,255,0.12)",
               minHeight: 180,
             }}>
-              <div className="flex flex-col items-center gap-2 opacity-20">
-                <span style={{ fontSize: 40 }}>🦞</span>
-              </div>
+              {playArea && playArea.length > 0 ? (
+                <div className="flex flex-col items-center gap-2">
+                  {/* Who played */}
+                  {playAreaOwner !== null && (
+                    <p className="text-xs" style={{ color: players[playAreaOwner]?.color, fontFamily: "Orbitron, sans-serif", fontSize: 9 }}>
+                      {players[playAreaOwner]?.name.replace("OpenClaw ", "")} 出牌
+                    </p>
+                  )}
+                  {/* Cards */}
+                  <div className="flex gap-1 flex-wrap justify-center">
+                    {playArea.map((card, i) => (
+                      <CardComponent key={i} card={card} />
+                    ))}
+                  </div>
+                  {/* Type label */}
+                  {(() => {
+                    const t = getCardType(playArea, levelRank);
+                    return t ? (
+                      <span className="text-xs px-2 py-0.5 rounded" style={{
+                        background: "rgba(0,245,255,0.1)", color: "#00f5ff",
+                        border: "1px solid rgba(0,245,255,0.2)", fontFamily: "Orbitron, sans-serif", fontSize: 9
+                      }}>{getTypeLabel(t.type)}</span>
+                    ) : null;
+                  })()}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2 opacity-20">
+                  <span style={{ fontSize: 40 }}>🦞</span>
+                  <p className="font-orbitron text-xs" style={{ color: "#64748b" }}>等待出牌</p>
+                </div>
+              )}
+
               {/* Finish order badges */}
               {finishOrder.length > 0 && (
-                <div className="flex gap-1 flex-wrap justify-center">
+                <div className="flex gap-1 mt-2">
                   {finishOrder.map((pi, rank) => (
                     <span key={pi} className="text-xs px-2 py-0.5 rounded" style={{
                       background: rank === 0 ? "#ffd70022" : rank === 3 ? "#ff444422" : "rgba(255,255,255,0.05)",
@@ -376,15 +379,13 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
             </div>
 
             {/* Right player */}
-            <div className="flex flex-col items-center gap-1" style={{ width: 230, flexShrink: 0 }}>
+            <div className="flex justify-center" style={{ width: 230, flexShrink: 0 }}>
               <PlayerHand player={rightPlayer} isActive={currentPlayer === 1 && !gameOver} position="right" />
-              <PlayedCards cards={plp[1]} playerColor={rightPlayer.color} playerName={rightPlayer.name} levelRank={levelRank} />
             </div>
           </div>
 
           {/* Bottom player */}
-          <div className="flex flex-col items-center gap-1">
-            <PlayedCards cards={plp[0]} playerColor={bottomPlayer.color} playerName={bottomPlayer.name} levelRank={levelRank} />
+          <div className="flex justify-center">
             <PlayerHand player={bottomPlayer} isActive={currentPlayer === 0 && !gameOver} position="bottom" />
           </div>
         </div>
