@@ -165,7 +165,7 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
     setGameState(prev => {
       if (!prev || prev.gameOver) return prev;
 
-      const { players, currentPlayer, lastPlay, lastPlayPlayer, passCount, finishOrder } = prev;
+      const { players, currentPlayer, lastPlay, lastPlayPlayer, passCount, finishOrder, roundPlays } = prev;
       const player = players[currentPlayer];
 
       if (!player || player.finishedAt !== null) {
