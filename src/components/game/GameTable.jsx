@@ -110,7 +110,13 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
 
     const players = AI_CONFIGS.map((cfg, i) => ({
       ...cfg,
-      hand: hands[i],
+      // Sort hand by card value ascending for readability
+      hand: [...hands[i]].sort((a, b) => {
+        const av = getCardValue(a, levelRank);
+        const bv = getCardValue(b, levelRank);
+        if (av !== bv) return av - bv;
+        return a.suit < b.suit ? -1 : 1;
+      }),
       level,
       finishedAt: null,
     }));
