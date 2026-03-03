@@ -19,33 +19,53 @@ export default function CardComponent({ card, selected, onClick, faceDown = fals
   const isRed = RED_SUITS.includes(card.suit);
   const isJoker = card.rank === "大王" || card.rank === "小王";
 
+  const w = small ? 32 : 52;
+  const h = small ? 48 : 78;
+  const fSize = small ? 9 : 14;
+  const suitSize = small ? 8 : 12;
+  const centerSize = small ? 11 : 20;
+
   return (
     <div
-      className={`playing-card ${isRed ? "card-red" : "card-black"} ${selected ? "card-selected" : ""}`}
-      style={small ? { width: 32, height: 48, padding: "2px 3px" } : {}}
       onClick={onClick}
+      style={{
+        width: w, height: h,
+        borderRadius: 6,
+        background: "#ffffff",
+        border: `1.5px solid ${selected ? "#00f5ff" : isRed ? "#e88" : "#99a"}`,
+        boxShadow: selected
+          ? "0 0 14px rgba(0,245,255,0.9), 0 2px 6px rgba(0,0,0,0.5)"
+          : "0 2px 6px rgba(0,0,0,0.6)",
+        display: "flex", flexDirection: "column",
+        justifyContent: "space-between",
+        padding: small ? "2px 3px" : "4px 5px",
+        cursor: onClick ? "pointer" : "default",
+        transform: selected ? "translateY(-8px)" : undefined,
+        transition: "all 0.15s ease",
+        userSelect: "none",
+        flexShrink: 0,
+        color: isRed ? "#cc2222" : "#222244",
+      }}
     >
       {isJoker ? (
-        <div className="w-full h-full flex items-center justify-center flex-col">
-          <span style={{ fontSize: small ? "8px" : "14px", color: card.rank === "大王" ? "#ff4444" : "#00f5ff" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+          <span style={{ fontSize: centerSize, color: card.rank === "大王" ? "#cc2222" : "#2244cc" }}>
             {card.rank === "大王" ? "🃏" : "🂿"}
           </span>
-          <span style={{ fontSize: small ? "6px" : "10px", color: card.rank === "大王" ? "#ff4444" : "#00f5ff" }}>
+          <span style={{ fontSize: suitSize, fontWeight: 700, color: card.rank === "大王" ? "#cc2222" : "#2244cc" }}>
             {card.rank}
           </span>
         </div>
       ) : (
         <>
-          <div className="flex flex-col leading-none">
-            <span style={{ fontSize: small ? "8px" : "13px", lineHeight: 1 }}>{card.rank}</span>
-            <span style={{ fontSize: small ? "7px" : "11px", lineHeight: 1 }}>{card.suit}</span>
+          <div style={{ lineHeight: 1 }}>
+            <div style={{ fontSize: fSize, fontWeight: 800, lineHeight: 1 }}>{card.rank}</div>
+            <div style={{ fontSize: suitSize, lineHeight: 1 }}>{card.suit}</div>
           </div>
-          <div className="flex-1 flex items-center justify-center">
-            <span style={{ fontSize: small ? "10px" : "18px" }}>{card.suit}</span>
-          </div>
-          <div className="flex flex-col leading-none rotate-180">
-            <span style={{ fontSize: small ? "8px" : "13px", lineHeight: 1 }}>{card.rank}</span>
-            <span style={{ fontSize: small ? "7px" : "11px", lineHeight: 1 }}>{card.suit}</span>
+          <div style={{ textAlign: "center", fontSize: centerSize }}>{card.suit}</div>
+          <div style={{ lineHeight: 1, transform: "rotate(180deg)", alignSelf: "flex-end" }}>
+            <div style={{ fontSize: fSize, fontWeight: 800, lineHeight: 1 }}>{card.rank}</div>
+            <div style={{ fontSize: suitSize, lineHeight: 1 }}>{card.suit}</div>
           </div>
         </>
       )}
