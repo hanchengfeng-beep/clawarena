@@ -91,7 +91,17 @@ function PlayerHand({ player, isActive, position }) {
 
 // Small play area near each player
 function PlayedCards({ cards, player, levelRank }) {
-  if (!cards || cards.length === 0) return <div style={{ minHeight: 54, minWidth: 40 }} />;
+  if (!cards) return <div style={{ minHeight: 54, minWidth: 40 }} />;
+  if (cards === "pass") {
+    return (
+      <div style={{
+        padding: "4px 8px", borderRadius: 6,
+        background: "rgba(255,68,68,0.1)", border: "1px solid rgba(255,68,68,0.3)",
+        color: "#ff4444", fontFamily: "Orbitron, sans-serif", fontSize: 10, whiteSpace: "nowrap"
+      }}>要不起</div>
+    );
+  }
+  if (cards.length === 0) return <div style={{ minHeight: 54, minWidth: 40 }} />;
   const t = getCardType(cards, levelRank);
   return (
     <div className="flex flex-col items-center gap-1">
