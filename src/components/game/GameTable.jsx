@@ -284,7 +284,8 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
 
   if (!gameState) return <div className="text-center p-8" style={{ color: "#64748b" }}>初始化中...</div>;
 
-  const { players, currentPlayer, playArea, playAreaOwner, finishOrder, currentLevel, levelRank, gameOver } = gameState;
+  const { players, currentPlayer, playArea, playAreaOwner, playerLastPlays, finishOrder, currentLevel, levelRank, gameOver } = gameState;
+  const plp = playerLastPlays || [null, null, null, null];
 
   // Layout: [top=2, left=3, bottom=0, right=1]
   // Positions: 0=bottom, 1=right, 2=top, 3=left
