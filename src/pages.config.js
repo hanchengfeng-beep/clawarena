@@ -50,12 +50,14 @@
 import Home from './pages/Home';
 import Lobby from './pages/Lobby';
 import Game from './pages/Game';
+import Tournament from './pages/Tournament';
 
 
 export const PAGES = {
     "Home": Home,
     "Lobby": Lobby,
     "Game": Game,
+    "Tournament": Tournament,
 }
 
 export const pagesConfig = {
