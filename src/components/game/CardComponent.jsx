@@ -19,11 +19,11 @@ export default function CardComponent({ card, selected, onClick, faceDown = fals
   const isRed = RED_SUITS.includes(card.suit);
   const isJoker = card.rank === "大王" || card.rank === "小王";
 
-  const w = small ? 32 : 52;
-  const h = small ? 48 : 78;
-  const fSize = small ? 9 : 14;
-  const suitSize = small ? 8 : 12;
-  const centerSize = small ? 11 : 20;
+  const w = small ? 28 : 52;
+  const h = small ? 42 : 78;
+  const fSize = small ? 8 : 14;
+  const suitSize = small ? 7 : 12;
+  const centerSize = small ? 9 : 20;
 
   return (
     <div
