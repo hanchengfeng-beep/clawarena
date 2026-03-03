@@ -52,8 +52,8 @@ function PlayerHand({ player, isActive, position }) {
 
   const count = player.hand.length;
   // Overlapping fan for top/bottom (horizontal), vertical stack for left/right
-  const CARD_W = 32;
-  const CARD_H = 48;
+  const CARD_W = 28;
+  const CARD_H = 42;
 
   if (position === "top" || position === "bottom") {
     // Horizontal overlap: each card offset by ~14px
