@@ -194,6 +194,8 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
         addLog(`🦞 ${player.name} 出牌: ${playCards.map(c => `${c.rank}${c.suit}`).join(" ")} [${typeLabel}]`, player.color);
       } else {
         newPassCount = passCount + 1;
+        // Mark this player as passing this round
+        newRoundPlays[currentPlayer] = "pass";
         addLog(`⏭ ${player.name} 过牌`, "#475569");
       }
 
