@@ -334,56 +334,84 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
         {/* Game board */}
         <div className="flex-1 flex flex-col gap-2">
 
-          {/* Top player + their play area below */}
-          <div className="flex flex-col items-center gap-1">
+          {/* Top player */}
+          <div className="flex justify-center">
             <PlayerHand player={topPlayer} isActive={currentPlayer === 2 && !gameOver} position="top" />
-            <PlayedCards cards={playAreaOwner === 2 ? playArea : []} player={topPlayer} levelRank={levelRank} />
           </div>
 
-          {/* Middle row: left | center table | right */}
-          <div className="flex items-stretch gap-2">
-            {/* Left player + play area to the right */}
-            <div className="flex items-center gap-2" style={{ width: 280, flexShrink: 0 }}>
+          {/* Middle row: left | center square table | right */}
+          <div className="flex items-center gap-2">
+            {/* Left player */}
+            <div className="flex justify-center" style={{ width: 120, flexShrink: 0 }}>
               <PlayerHand player={leftPlayer} isActive={currentPlayer === 3 && !gameOver} position="left" />
-              <PlayedCards cards={playAreaOwner === 3 ? playArea : []} player={leftPlayer} levelRank={levelRank} />
             </div>
 
-            {/* Center table */}
-            <div className="flex-1 rounded-xl flex flex-col items-center justify-center gap-2" style={{
+            {/* Square center table with 4 play zones */}
+            <div style={{
+              width: 480, height: 480, flexShrink: 0,
               background: "radial-gradient(ellipse at center, #0d2a1a 0%, #060d14 100%)",
-              border: "1px solid rgba(0,245,255,0.12)",
-              minHeight: 220,
+              border: "1px solid rgba(0,245,255,0.15)",
+              borderRadius: 16,
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gridTemplateRows: "1fr 1fr",
+              position: "relative",
             }}>
-              <div className="opacity-20 flex flex-col items-center gap-1">
-                <span style={{ fontSize: 48 }}>🦞</span>
-              </div>
-              {/* Finish order badges */}
+              {/* Lobster watermark in center */}
+              <div style={{
+                position: "absolute", top: "50%", left: "50%",
+                transform: "translate(-50%,-50%)",
+                fontSize: 48, opacity: 0.12, pointerEvents: "none", zIndex: 0
+              }}>🦞</div>
+
+              {/* Finish order badges center */}
               {finishOrder.length > 0 && (
-                <div className="flex flex-wrap gap-1 justify-center px-2">
+                <div style={{
+                  position: "absolute", top: "50%", left: "50%",
+                  transform: "translate(-50%,-50%)",
+                  display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center",
+                  zIndex: 2, width: 160
+                }}>
                   {finishOrder.map((pi, rank) => (
-                    <span key={pi} className="text-xs px-2 py-0.5 rounded" style={{
+                    <span key={pi} style={{
                       background: rank === 0 ? "#ffd70022" : rank === 3 ? "#ff444422" : "rgba(255,255,255,0.05)",
                       color: rank === 0 ? "#ffd700" : rank === 3 ? "#ff4444" : "#94a3b8",
                       border: `1px solid ${rank === 0 ? "#ffd70044" : rank === 3 ? "#ff444444" : "rgba(255,255,255,0.1)"}`,
-                      fontFamily: "Orbitron, sans-serif", fontSize: 9
+                      fontFamily: "Orbitron, sans-serif", fontSize: 9,
+                      padding: "2px 6px", borderRadius: 4
                     }}>
                       {["🥇", "🥈", "🥉", "❌"][rank]} {players[pi].name.replace("OpenClaw ", "")}
                     </span>
                   ))}
                 </div>
               )}
+
+              {/* Top quadrant (player 2 = Gamma) */}
+              <div style={{ gridColumn: "1/3", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "12px 8px 4px", zIndex: 1 }}>
+                <PlayedCards cards={roundPlays[2] || []} player={topPlayer} levelRank={levelRank} />
+              </div>
+              {/* Left quadrant (player 3 = Delta) */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", padding: "4px 4px 4px 12px", zIndex: 1 }}>
+                <PlayedCards cards={roundPlays[3] || []} player={leftPlayer} levelRank={levelRank} />
+              </div>
+              {/* Right quadrant (player 1 = Beta) */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "4px 12px 4px 4px", zIndex: 1 }}>
+                <PlayedCards cards={roundPlays[1] || []} player={rightPlayer} levelRank={levelRank} />
+              </div>
+              {/* Bottom quadrant (player 0 = Alpha) */}
+              <div style={{ gridColumn: "1/3", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "4px 8px 12px", zIndex: 1 }}>
+                <PlayedCards cards={roundPlays[0] || []} player={bottomPlayer} levelRank={levelRank} />
+              </div>
             </div>
 
-            {/* Right player + play area to the left */}
-            <div className="flex items-center gap-2 flex-row-reverse" style={{ width: 280, flexShrink: 0 }}>
+            {/* Right player */}
+            <div className="flex justify-center" style={{ width: 120, flexShrink: 0 }}>
               <PlayerHand player={rightPlayer} isActive={currentPlayer === 1 && !gameOver} position="right" />
-              <PlayedCards cards={playAreaOwner === 1 ? playArea : []} player={rightPlayer} levelRank={levelRank} />
             </div>
           </div>
 
-          {/* Bottom player: play area above, then hand */}
-          <div className="flex flex-col items-center gap-1">
-            <PlayedCards cards={playAreaOwner === 0 ? playArea : []} player={bottomPlayer} levelRank={levelRank} />
+          {/* Bottom player */}
+          <div className="flex justify-center">
             <PlayerHand player={bottomPlayer} isActive={currentPlayer === 0 && !gameOver} position="bottom" />
           </div>
         </div>
