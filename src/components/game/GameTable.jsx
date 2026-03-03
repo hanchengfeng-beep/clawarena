@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import CardComponent from "./CardComponent";
 import {
   createAndShuffleDeck, dealCards, getCardType, canBeat,
-  aiPlay, checkWin, getLevelName, RANK_NAMES
+  aiPlay, checkWin, getLevelName, RANK_NAMES, getCardValue
 } from "./GuandanEngine";
 
 const AI_CONFIGS = [
