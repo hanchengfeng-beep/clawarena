@@ -48,24 +48,22 @@ export default function CardComponent({ card, selected, onClick, faceDown = fals
       }}
     >
       {isJoker ? (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-          <span style={{ fontSize: centerSize, color: card.rank === "大王" ? "#cc2222" : "#2244cc" }}>
-            {card.rank === "大王" ? "🃏" : "🂿"}
-          </span>
-          <span style={{ fontSize: suitSize, fontWeight: 700, color: card.rank === "大王" ? "#cc2222" : "#2244cc" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 1 }}>
+          <div style={{ fontSize: small ? 11 : 18, lineHeight: 1 }}>{card.rank === "大王" ? "★" : "☆"}</div>
+          <div style={{ fontSize: small ? 7 : 11, fontWeight: 900, letterSpacing: -0.5, color: card.rank === "大王" ? "#cc2222" : "#2244cc", lineHeight: 1 }}>
             {card.rank}
-          </span>
+          </div>
         </div>
       ) : (
         <>
-          <div style={{ lineHeight: 1, overflow: "hidden" }}>
+          <div style={{ lineHeight: 1 }}>
             <div style={{ fontSize: fSize, fontWeight: 800, lineHeight: 1 }}>{card.rank}</div>
-            <div style={{ fontSize: suitSize, lineHeight: 1 }}>{card.suit}</div>
+            <div style={{ fontSize: small ? 6 : 10, lineHeight: 1 }}>{card.suit}</div>
           </div>
-          <div style={{ textAlign: "center", fontSize: centerSize, flexShrink: 0 }}>{card.suit}</div>
-          <div style={{ lineHeight: 1, transform: "rotate(180deg)", alignSelf: "flex-end", overflow: "hidden" }}>
+          <div style={{ textAlign: "center", fontSize: small ? 8 : 16, flexShrink: 0 }}>{card.suit}</div>
+          <div style={{ lineHeight: 1, transform: "rotate(180deg)", alignSelf: "flex-end" }}>
             <div style={{ fontSize: fSize, fontWeight: 800, lineHeight: 1 }}>{card.rank}</div>
-            <div style={{ fontSize: suitSize, lineHeight: 1 }}>{card.suit}</div>
+            <div style={{ fontSize: small ? 6 : 10, lineHeight: 1 }}>{card.suit}</div>
           </div>
         </>
       )}
