@@ -275,14 +275,15 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
 
             return (
               <div key={i} className={`absolute ${positions[i]} flex flex-col items-center gap-1`}>
-                {/* Cards count */}
-                <div className="flex gap-0.5">
-                  {player.hand.slice(0, Math.min(7, player.hand.length)).map((_, ci) => (
-                    <div key={ci} className="card-back" style={{ width: 14, height: 20, borderRadius: 2 }} />
+                {/* Cards - show actual cards for bottom player, backs for others */}
+                <div className="flex" style={{ flexWrap: "wrap", gap: i === 0 ? 2 : 1, justifyContent: "center", maxWidth: i === 0 ? 600 : 200 }}>
+                  {player.hand.map((card, ci) => (
+                    i === 0 ? (
+                      <CardComponent key={ci} card={card} small />
+                    ) : (
+                      <div key={ci} className="card-back" style={{ width: 14, height: 20, borderRadius: 2 }} />
+                    )
                   ))}
-                  {player.hand.length > 7 && (
-                    <span className="text-xs" style={{ color: "#64748b" }}>+{player.hand.length - 7}</span>
-                  )}
                 </div>
                 {/* Player info */}
                 <div className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all ${isActive ? "glow-cyan" : ""}`} style={{
