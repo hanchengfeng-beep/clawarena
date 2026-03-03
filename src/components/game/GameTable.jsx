@@ -89,6 +89,27 @@ function PlayerHand({ player, isActive, position }) {
   );
 }
 
+// Small play area near each player
+function PlayedCards({ cards, player, levelRank }) {
+  if (!cards || cards.length === 0) return <div style={{ minHeight: 54, minWidth: 40 }} />;
+  const t = getCardType(cards, levelRank);
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="flex gap-1 flex-wrap justify-center">
+        {cards.map((card, i) => (
+          <CardComponent key={i} card={card} />
+        ))}
+      </div>
+      {t && (
+        <span className="text-xs px-1.5 py-0.5 rounded" style={{
+          background: "rgba(0,245,255,0.12)", color: player.color,
+          border: `1px solid ${player.color}44`, fontFamily: "Orbitron, sans-serif", fontSize: 9
+        }}>{getTypeLabel(t.type)}</span>
+      )}
+    </div>
+  );
+}
+
 export default function GameTable({ tableNumber, round, onGameEnd }) {
   const [gameState, setGameState] = useState(null);
   const [log, setLog] = useState([]);
