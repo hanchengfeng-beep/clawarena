@@ -52,17 +52,16 @@ function PlayerHand({ player, isActive, position }) {
 
   const count = player.hand.length;
   // Overlapping fan for top/bottom (horizontal), vertical stack for left/right
-  const CARD_W = 28;
-  const CARD_H = 42;
+  const CARD_W = 36;
+  const CARD_H = 54;
 
   if (position === "top" || position === "bottom") {
-    // Horizontal overlap: each card offset by ~14px
-    const overlap = 14;
+    const overlap = 18;
     const totalW = count > 0 ? CARD_W + overlap * (count - 1) : 0;
     return (
       <div className="flex flex-col items-center gap-2">
         {badge}
-        <div style={{ position: "relative", width: totalW, height: CARD_H }}>
+        <div style={{ position: "relative", width: Math.max(totalW, CARD_W), height: CARD_H }}>
           {player.hand.map((card, i) => (
             <div key={`${card.id}-${i}`} style={{ position: "absolute", left: i * overlap, top: 0, zIndex: i }}>
               <CardComponent card={card} small />
@@ -74,12 +73,12 @@ function PlayerHand({ player, isActive, position }) {
   }
 
   // Left / right: vertical overlap stack
-  const vOverlap = 14;
+  const vOverlap = 18;
   const totalH = count > 0 ? CARD_H + vOverlap * (count - 1) : 0;
   return (
     <div className="flex flex-col items-center gap-2">
       {badge}
-      <div style={{ position: "relative", width: CARD_W, height: totalH }}>
+      <div style={{ position: "relative", width: CARD_W, height: Math.max(totalH, CARD_H) }}>
         {player.hand.map((card, i) => (
           <div key={`${card.id}-${i}`} style={{ position: "absolute", top: i * vOverlap, left: 0, zIndex: i }}>
             <CardComponent card={card} small />
