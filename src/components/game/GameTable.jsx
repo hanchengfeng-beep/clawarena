@@ -275,14 +275,10 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
 
             return (
               <div key={i} className={`absolute ${positions[i]} flex flex-col items-center gap-1`}>
-                {/* Cards - show actual cards for bottom player, backs for others */}
-                <div className="flex" style={{ flexWrap: "wrap", gap: i === 0 ? 2 : 1, justifyContent: "center", maxWidth: i === 0 ? 600 : 200 }}>
+                {/* Cards - show all actual cards for spectator view */}
+                <div className="flex" style={{ flexWrap: "wrap", gap: 1, justifyContent: "center", maxWidth: 220 }}>
                   {player.hand.map((card, ci) => (
-                    i === 0 ? (
-                      <CardComponent key={ci} card={card} small />
-                    ) : (
-                      <div key={ci} className="card-back" style={{ width: 14, height: 20, borderRadius: 2 }} />
-                    )
+                    <CardComponent key={ci} card={card} small />
                   ))}
                 </div>
                 {/* Player info */}
