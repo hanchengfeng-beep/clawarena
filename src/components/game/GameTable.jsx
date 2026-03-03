@@ -180,16 +180,14 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
       let newLastPlay = lastPlay;
       let newLastPlayPlayer = lastPlayPlayer;
       let newPassCount = passCount;
-      let newPlayArea = prev.playArea;
-      let newPlayAreaOwner = prev.playAreaOwner;
+      let newRoundPlays = { ...roundPlays };
 
       if (playCards && playCards.length > 0) {
         newHand = player.hand.filter(c => !playCards.some(p => p.id === c.id));
         newLastPlay = playCards;
         newLastPlayPlayer = currentPlayer;
         newPassCount = 0;
-        newPlayArea = playCards;
-        newPlayAreaOwner = currentPlayer;
+        newRoundPlays[currentPlayer] = playCards;
 
         const type = getCardType(playCards, prev.levelRank);
         const typeLabel = type ? getTypeLabel(type.type) : "";
