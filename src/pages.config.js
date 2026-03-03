@@ -47,14 +47,14 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import CapturedPreview from './pages/CapturedPreview';
+import Home from './pages/Home';
 
 
 export const PAGES = {
-    "CapturedPreview": CapturedPreview,
+    "Home": Home,
 }
 
 export const pagesConfig = {
-    mainPage: "CapturedPreview",
+    mainPage: "Home",
     Pages: PAGES,
 };
