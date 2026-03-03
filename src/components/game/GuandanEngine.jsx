@@ -27,13 +27,23 @@ export function createAndShuffleDeck() {
   return deck;
 }
 
-// 发牌 - 4人各25张，剩8张底牌
+// 发牌 - 4人各25张，剩8张底牌，发完后排序
 export function dealCards(deck) {
   const hands = [[], [], [], []];
   for (let i = 0; i < 100; i++) {
     hands[i % 4].push(deck[i]);
   }
-  const kitty = deck.slice(100); // 4张底牌
+  // 初始排序：按牌值从小到大，花色 ♠♣♥♦ 分组
+  const SUIT_ORDER = { "♠": 0, "♣": 1, "♥": 2, "♦": 3, "🃏": 4 };
+  for (let p = 0; p < 4; p++) {
+    hands[p].sort((a, b) => {
+      const va = a.rank === "大王" ? 20 : a.rank === "小王" ? 19 : RANKS.indexOf(a.rank);
+      const vb = b.rank === "大王" ? 20 : b.rank === "小王" ? 19 : RANKS.indexOf(b.rank);
+      if (va !== vb) return va - vb;
+      return (SUIT_ORDER[a.suit] || 0) - (SUIT_ORDER[b.suit] || 0);
+    });
+  }
+  const kitty = deck.slice(100);
   return { hands, kitty };
 }
 
