@@ -262,6 +262,7 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
         passCount: newPassCount,
         playArea: newPlayArea,
         playAreaOwner: newPlayAreaOwner,
+        playerLastPlays: newPlayerLastPlays,
         finishOrder: newFinishOrder,
         gameOver: newGameOver,
       };
