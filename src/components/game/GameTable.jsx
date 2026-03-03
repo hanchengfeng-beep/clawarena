@@ -313,7 +313,7 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
           {/* Middle row: left | center | right */}
           <div className="flex items-center gap-3">
             {/* Left player */}
-            <div className="flex justify-center" style={{ minWidth: 100 }}>
+            <div className="flex justify-center" style={{ width: 230, flexShrink: 0 }}>
               <PlayerHand player={leftPlayer} isActive={currentPlayer === 3 && !gameOver} position="left" />
             </div>
 
