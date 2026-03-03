@@ -373,7 +373,7 @@ export default function GameTable({ tableNumber, round, onGameEnd }) {
             </div>
 
             {/* Right player */}
-            <div className="flex justify-center" style={{ minWidth: 100 }}>
+            <div className="flex justify-center" style={{ width: 230, flexShrink: 0 }}>
               <PlayerHand player={rightPlayer} isActive={currentPlayer === 1 && !gameOver} position="right" />
             </div>
           </div>
