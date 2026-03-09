@@ -37,59 +37,63 @@ function dealCards(deck) {
   return hands;
 }
 
+async function checkAndStartGames(base44) {
+  const waitingTables = await base44.asServiceRole.entities.Table.filter({ status: 'waiting' });
+
+  for (const table of waitingTables) {
+    const seats = await base44.asServiceRole.entities.Seat.filter({ table_id: table.id });
+
+    if (seats.length === 4) {
+      console.log(`Starting game on table ${table.id} (#${table.table_number})`);
+
+      const seatsWithKlaw = await Promise.all(
+        seats.map(async (s, idx) => {
+          const k = await base44.asServiceRole.entities.Klaw.get(s.klaw_id);
+          return { klaw_id: s.klaw_id, name: k.name, avatar: k.avatar, seat: idx };
+        })
+      );
+
+      const deck = shuffle(createDeck());
+      const hands = dealCards(deck);
+
+      const gameState = {
+        status: 'playing',
+        seats: seatsWithKlaw,
+        hands: hands.map((h, i) => ({ seat: i, klaw_id: seatsWithKlaw[i].klaw_id, cards: h })),
+        currentPlayer: 0,
+        lastPlay: [],
+        lastPlaySeat: null,
+        passCount: 0,
+        roundPlays: {},
+        finishOrder: [],
+        levelRank: "2",
+        currentLevel: 2,
+        turnStartedAt: Date.now(),
+        gameLog: [`游戏开始！级牌：2`]
+      };
+
+      await base44.asServiceRole.entities.Table.update(table.id, {
+        status: 'playing',
+        game_state: gameState
+      });
+
+      for (const s of seatsWithKlaw) {
+        await base44.asServiceRole.entities.Klaw.update(s.klaw_id, { status: 'playing' });
+      }
+    }
+  }
+}
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
   try {
-    // 查询所有 waiting 状态的表
-    const waitingTables = await base44.asServiceRole.entities.Table.filter({ status: 'waiting' });
-
-    for (const table of waitingTables) {
-      // 查询该表的座位数
-      const seats = await base44.asServiceRole.entities.Seat.filter({ table_id: table.id });
-
-      if (seats.length === 4) {
-        console.log(`Starting game on table ${table.id} (#${table.table_number})`);
-
-        // 获取所有座位对应的龙虾信息
-        const seatsWithKlaw = await Promise.all(
-          seats.map(async (s, idx) => {
-            const k = await base44.asServiceRole.entities.Klaw.get(s.klaw_id);
-            return { klaw_id: s.klaw_id, name: k.name, avatar: k.avatar, seat: idx };
-          })
-        );
-
-        // 发牌
-        const deck = shuffle(createDeck());
-        const hands = dealCards(deck);
-
-        const gameState = {
-          status: 'playing',
-          seats: seatsWithKlaw,
-          hands: hands.map((h, i) => ({ seat: i, klaw_id: seatsWithKlaw[i].klaw_id, cards: h })),
-          currentPlayer: 0,
-          lastPlay: [],
-          lastPlaySeat: null,
-          passCount: 0,
-          roundPlays: {},
-          finishOrder: [],
-          levelRank: "2",
-          currentLevel: 2,
-          turnStartedAt: Date.now(),
-          gameLog: [`游戏开始！级牌：2`]
-        };
-
-        // 更新表状态
-        await base44.asServiceRole.entities.Table.update(table.id, {
-          status: 'playing',
-          game_state: gameState
-        });
-
-        // 更新所有玩家状态为 playing
-        for (const s of seatsWithKlaw) {
-          await base44.asServiceRole.entities.Klaw.update(s.klaw_id, { status: 'playing' });
-        }
-      }
+    // 运行 5 分钟，每 5 秒检查一次
+    const endTime = Date.now() + (5 * 60 * 1000);
+    
+    while (Date.now() < endTime) {
+      await checkAndStartGames(base44);
+      await new Promise(r => setTimeout(r, 5000)); // 5 秒
     }
 
     return Response.json({ message: 'Auto-start check completed' });
