@@ -62,33 +62,30 @@ Deno.serve(async (req) => {
   }
 
   let table = null;
+  let tableToJoin = targetTableNumber;
 
-  // 如果指定了桌号，直接加入该桌（不存在或finished则创建）
+  // 如果指定了桌号，直接查找或创建该桌
   if (targetTableNumber) {
     const allTables = await base44.asServiceRole.entities.Table.filter({});
-    const found = allTables.filter(t => t.table_number === targetTableNumber);
-    if (found.length === 0 || found[0].status === 'finished') {
-      // 创建或重建指定桌号的新桌
-      if (found.length > 0) {
-        // 删除旧的finished桌
-        await base44.asServiceRole.entities.Table.delete(found[0].id);
+    const found = allTables.filter(t => t.table_number === targetTableNumber && t.status !== 'finished');
+    if (found.length > 0) {
+      table = found[0];
+    } else {
+      // 删除旧的finished桌（如有）
+      const finished = allTables.filter(t => t.table_number === targetTableNumber && t.status === 'finished');
+      if (finished.length > 0) {
+        await base44.asServiceRole.entities.Table.delete(finished[0].id);
       }
+      // 创建新桌
       table = await base44.asServiceRole.entities.Table.create({
         table_number: targetTableNumber,
         status: 'waiting',
         current_level: 2,
         game_state: { seats: [], status: 'waiting' }
       });
-    } else {
-      const t = found[0];
-      if (t.status !== 'waiting') return Response.json({ error: `Table is not available (status: ${t.status})` }, { status: 400 });
-      const seats = t.game_state?.seats || [];
-      if (seats.length >= 4) return Response.json({ error: 'Table is full' }, { status: 400 });
-      if (seats.find(s => s.klaw_id === klawId)) return Response.json({ error: 'Already seated at this table' }, { status: 400 });
-      table = t;
     }
   } else {
-    // 自动找一个等待中且有空位的桌子：遍历所有桌子，找到第一个有空位的
+    // 自动找一个等待中且有空位的桌子
     const allTables = await base44.asServiceRole.entities.Table.filter({});
     const regularWaitingTables = allTables
       .filter(t => !t.tournament_id && t.status === 'waiting' && t.table_number >= 1 && t.table_number <= 25)
@@ -101,38 +98,45 @@ Deno.serve(async (req) => {
         break;
       }
     }
-  }
-
-  if (!table) {
-    // 固定 1-25 号桌：找出当前所有常规桌已占用的桌号，分配最小可用桌号
-    const allRegularTables = await base44.asServiceRole.entities.Table.filter({});
-    const occupiedNumbers = new Set(
-      allRegularTables
-        .filter(t => !t.tournament_id && t.status !== 'finished' && t.table_number >= 1 && t.table_number <= 25)
-        .map(t => t.table_number)
-    );
-    let nextNumber = null;
-    for (let n = 1; n <= 25; n++) {
-      if (!occupiedNumbers.has(n)) { nextNumber = n; break; }
-    }
-    if (nextNumber === null) {
-      return Response.json({ error: 'Regular lobby is full (max 25 tables). Try again later.' }, { status: 503 });
-    }
     
-    // 创建前再次从数据库查询该号桌（防止并发冲突）
-    const freshCheck = await base44.asServiceRole.entities.Table.filter({});
-    const recheckTable = freshCheck.filter(t => t.table_number === nextNumber && t.status !== 'finished');
-    if (recheckTable.length > 0) {
-      table = recheckTable[0];
-    } else {
-      // 新建固定编号桌
-      table = await base44.asServiceRole.entities.Table.create({
+    // 还是没找到，创建新桌
+    if (!table) {
+      const allRegularTables = await base44.asServiceRole.entities.Table.filter({});
+      const occupiedNumbers = new Set(
+        allRegularTables
+          .filter(t => !t.tournament_id && t.status !== 'finished' && t.table_number >= 1 && t.table_number <= 25)
+          .map(t => t.table_number)
+      );
+      let nextNumber = null;
+      for (let n = 1; n <= 25; n++) {
+        if (!occupiedNumbers.has(n)) { nextNumber = n; break; }
+      }
+      if (nextNumber === null) {
+        return Response.json({ error: 'Regular lobby is full (max 25 tables). Try again later.' }, { status: 503 });
+      }
+      
+      // 创建前再次检查（防止并发）
+      const freshCheck = await base44.asServiceRole.entities.Table.filter({});
+      const recheckTable = freshCheck.filter(t => t.table_number === nextNumber && t.status !== 'finished');
+      table = recheckTable.length > 0 ? recheckTable[0] : await base44.asServiceRole.entities.Table.create({
         table_number: nextNumber,
         status: 'waiting',
         current_level: 2,
         game_state: { seats: [], status: 'waiting' }
       });
     }
+  }
+  
+  // 验证桌的可用性
+  if (table.status !== 'waiting') {
+    return Response.json({ error: `Table is not available (status: ${table.status})` }, { status: 400 });
+  }
+  const seats = table.game_state?.seats || [];
+  if (seats.length >= 4) {
+    return Response.json({ error: 'Table is full' }, { status: 400 });
+  }
+  if (seats.find(s => s.klaw_id === klawId)) {
+    return Response.json({ error: 'Already seated at this table' }, { status: 400 });
   }
 
   // 入座前重新读取最新的桌数据（防止并发冲突）
