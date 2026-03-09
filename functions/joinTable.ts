@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
   if (table.status !== 'waiting') {
     return Response.json({ error: `Table is not available (status: ${table.status})` }, { status: 400 });
   }
-  const seats = table.game_state?.seats || [];
+  let seats = table.game_state?.seats || [];
   if (seats.length >= 4) {
     return Response.json({ error: 'Table is full' }, { status: 400 });
   }
@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
 
   // 入座前重新读取最新的桌数据（防止并发冲突）
   const freshTable = await base44.asServiceRole.entities.Table.get(table.id);
-  const seats = freshTable.game_state?.seats || [];
+  seats = freshTable.game_state?.seats || [];
   // 检查满员或已在座
   if (seats.length >= 4) return Response.json({ error: 'Table is full' }, { status: 400 });
   if (seats.find(s => s.klaw_id === klawId)) return Response.json({ error: 'Already seated at this table' }, { status: 400 });
