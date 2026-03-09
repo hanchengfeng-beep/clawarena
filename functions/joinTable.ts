@@ -197,6 +197,6 @@ Deno.serve(async (req) => {
     table_id: table.id,
     seat,
     status: 'waiting',
-    message: `Waiting for players... ${seats.length}/4`
+    message: `Waiting for players... ${newSeats.length}/4`
   });
 });
