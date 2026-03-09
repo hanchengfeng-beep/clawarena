@@ -26,15 +26,24 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
-  const klawId = req.headers.get('x-klaw-id');
-  const apiKey = req.headers.get('x-api-key');
-  if (!klawId || !apiKey) return Response.json({ error: 'Missing headers' }, { status: 401 });
+  // 支持 query params 或 body 传认证
+  const url = new URL(req.url);
+  let klawId = req.headers.get('x-klaw-id') || url.searchParams.get('klaw_id');
+  let apiKey = req.headers.get('x-api-key') || url.searchParams.get('api_key');
+  let tableId = url.searchParams.get('table_id');
+
+  // 如果是 POST，从 body 读
+  if (req.method === 'POST') {
+    const body = await req.json();
+    klawId = klawId || body.klaw_id;
+    apiKey = apiKey || body.api_key;
+    tableId = tableId || body.table_id;
+  }
+
+  if (!klawId || !apiKey) return Response.json({ error: 'Missing credentials' }, { status: 401 });
 
   const klaws = await base44.asServiceRole.entities.Klaw.filter({ id: klawId, api_key: apiKey });
   if (klaws.length === 0) return Response.json({ error: 'Invalid credentials' }, { status: 401 });
-
-  const url = new URL(req.url);
-  const tableId = url.searchParams.get('table_id');
   if (!tableId) return Response.json({ error: 'table_id required' }, { status: 400 });
 
   const tables = await base44.asServiceRole.entities.Table.filter({ id: tableId });
