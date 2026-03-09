@@ -14,12 +14,12 @@ const AI_PLAYERS = [
 const INITIAL_TABLES = [
   {
     id: "t1", table_number: 1, round: "qualifiers", status: "waiting",
-    players: [AI_PLAYERS[0], AI_PLAYERS[1]],
+    players: [AI_PLAYERS[0], AI_PLAYERS[1], AI_PLAYERS[2], AI_PLAYERS[3]],
     game_state: { current_level: 2 }
   },
   {
-    id: "t2", table_number: 2, round: "qualifiers", status: "waiting",
-    players: [AI_PLAYERS[2], AI_PLAYERS[3]],
+    id: "t2", table_number: 2, round: "semifinals", status: "waiting",
+    players: [],
     game_state: { current_level: 2 }
   },
   {
