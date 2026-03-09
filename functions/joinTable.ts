@@ -137,12 +137,50 @@ Deno.serve(async (req) => {
   }
 
   let table = null;
+  const determinedTableNumber = targetTableNumber || null;
 
-  if (targetTableNumber) {
-    // 指定了桌号
-    table = await getOrCreateWaitingTable(targetTableNumber);
+  if (determinedTableNumber) {
+    // 指定了桌号 - 直接使用原子操作
+    log(`DIRECT_TABLE: Using specified table #${determinedTableNumber}`);
+    
+    // 尝试获取现有的 queue 和 table
+    const existingQueues = await base44.asServiceRole.entities.TableQueue.filter({ table_number: determinedTableNumber });
+    
+    if (existingQueues.length > 0) {
+      const existingTable = await base44.asServiceRole.entities.Table.get(existingQueues[0].active_table_id);
+      if (existingTable && existingTable.status === 'waiting') {
+        const seats = existingTable.game_state?.seats || [];
+        if (seats.length < 4) {
+          table = existingTable;
+          log(`REUSE_TABLE: Using existing table ${table.id}`);
+        }
+      }
+    }
+    
+    // 如果没有可用表，创建新的
+    if (!table) {
+      log(`CREATE_NEW_TABLE: No available table #${determinedTableNumber}, creating...`);
+      table = await base44.asServiceRole.entities.Table.create({
+        table_number: determinedTableNumber,
+        status: 'waiting',
+        current_level: 2,
+        game_state: { seats: [], status: 'waiting' }
+      });
+      log(`TABLE_CREATED: ${table.id}`);
+      
+      if (existingQueues.length > 0) {
+        await base44.asServiceRole.entities.TableQueue.update(existingQueues[0].id, {
+          active_table_id: table.id
+        });
+      } else {
+        await base44.asServiceRole.entities.TableQueue.create({
+          table_number: determinedTableNumber,
+          active_table_id: table.id
+        });
+      }
+    }
   } else {
-    // 自动分配
+    // 自动分配 - 查找最有可能的候选表
     log(`AUTO_FIND: Looking for available table...`);
     const allQueues = await base44.asServiceRole.entities.TableQueue.filter({});
     
@@ -151,7 +189,7 @@ Deno.serve(async (req) => {
       if (t && t.status === 'waiting') {
         const seats = t.game_state?.seats || [];
         if (seats.length < 4 && !seats.find(s => s.klaw_id === klawId)) {
-          log(`TABLE_SELECTED: Using table #${q.table_number}`);
+          log(`TABLE_SELECTED: Using table #${q.table_number} (${seats.length}/4 seats)`);
           table = t;
           break;
         }
@@ -169,7 +207,19 @@ Deno.serve(async (req) => {
         log(`ERROR: Lobby full`);
         return Response.json({ error: 'Regular lobby is full. Try again later.', logs }, { status: 503 });
       }
-      table = await getOrCreateWaitingTable(nextNumber);
+      log(`CREATE_NEW_TABLE: Creating new table #${nextNumber}`);
+      table = await base44.asServiceRole.entities.Table.create({
+        table_number: nextNumber,
+        status: 'waiting',
+        current_level: 2,
+        game_state: { seats: [], status: 'waiting' }
+      });
+      log(`TABLE_CREATED: ${table.id}`);
+      
+      await base44.asServiceRole.entities.TableQueue.create({
+        table_number: nextNumber,
+        active_table_id: table.id
+      });
     }
   }
 
