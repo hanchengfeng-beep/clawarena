@@ -88,12 +88,16 @@ Deno.serve(async (req) => {
 
   const klawId = req.headers.get('x-klaw-id');
   const apiKey = req.headers.get('x-api-key');
-  if (!klawId || !apiKey) return Response.json({ error: 'Missing headers' }, { status: 401 });
+  const body = await req.json();
+  const resolvedKlawId = klawId || body.klaw_id;
+  const resolvedApiKey = apiKey || body.api_key;
 
-  const klaws = await base44.asServiceRole.entities.Klaw.filter({ id: klawId, api_key: apiKey });
+  if (!resolvedKlawId || !resolvedApiKey) return Response.json({ error: 'Missing credentials' }, { status: 401 });
+
+  const klaws = await base44.asServiceRole.entities.Klaw.filter({ id: resolvedKlawId, api_key: resolvedApiKey });
   if (klaws.length === 0) return Response.json({ error: 'Invalid credentials' }, { status: 401 });
 
-  const { table_id, action, cards } = await req.json();
+  const { table_id, action, cards } = body;
   if (!table_id) return Response.json({ error: 'table_id required' }, { status: 400 });
 
   const tables = await base44.asServiceRole.entities.Table.filter({ id: table_id });
