@@ -84,91 +84,159 @@ Deno.serve(async (req) => {
 
 
 
+  // 自旋获取或创建表的逻辑（处理并发冲突）
   let table = null;
   const determinedTableNumber = targetTableNumber || null;
+  let spinAttempts = 0;
 
-  if (determinedTableNumber) {
-    // 指定了桌号 - 直接使用原子操作
-    log(`DIRECT_TABLE: Using specified table #${determinedTableNumber}`);
-    
-    // 尝试获取现有的 queue 和 table
-    const existingQueues = await base44.asServiceRole.entities.TableQueue.filter({ table_number: determinedTableNumber });
-    
-    if (existingQueues.length > 0) {
-      const existingTable = await base44.asServiceRole.entities.Table.get(existingQueues[0].active_table_id);
-      if (existingTable && existingTable.status === 'waiting') {
-        const seats = existingTable.game_state?.seats || [];
-        if (seats.length < 4) {
-          table = existingTable;
-          log(`REUSE_TABLE: Using existing table ${table.id}`);
-        }
-      }
-    }
-    
-    // 如果没有可用表，创建新的
-    if (!table) {
-      log(`CREATE_NEW_TABLE: No available table #${determinedTableNumber}, creating...`);
-      table = await base44.asServiceRole.entities.Table.create({
-        table_number: determinedTableNumber,
-        status: 'waiting',
-        current_level: 2,
-        game_state: { seats: [], status: 'waiting' }
-      });
-      log(`TABLE_CREATED: ${table.id}`);
+  while (!table && spinAttempts < 10) {
+    spinAttempts++;
+    log(`SPIN_ATTEMPT: ${spinAttempts}/10, determinedTableNumber=${determinedTableNumber}`);
+
+    if (determinedTableNumber) {
+      // 指定了桌号
+      log(`DIRECT_TABLE: Using specified table #${determinedTableNumber}`);
+      
+      // 查询现有 queue
+      const existingQueues = await base44.asServiceRole.entities.TableQueue.filter({ table_number: determinedTableNumber });
       
       if (existingQueues.length > 0) {
-        await base44.asServiceRole.entities.TableQueue.update(existingQueues[0].id, {
-          active_table_id: table.id
-        });
+        // 已有 queue，获取其关联的表
+        const queue = existingQueues[0];
+        const existingTable = await base44.asServiceRole.entities.Table.get(queue.active_table_id);
+        
+        if (existingTable && existingTable.status === 'waiting') {
+          const seats = existingTable.game_state?.seats || [];
+          if (seats.length < 4) {
+            table = existingTable;
+            log(`REUSE_TABLE: Using existing table ${table.id}`);
+          } else {
+            log(`TABLE_FULL: Existing table is full, creating new one`);
+            // 表满了，创建新表
+            const newTable = await base44.asServiceRole.entities.Table.create({
+              table_number: determinedTableNumber,
+              status: 'waiting',
+              current_level: 2,
+              game_state: { seats: [], status: 'waiting' }
+            });
+            log(`NEW_TABLE_CREATED: ${newTable.id}`);
+            
+            // 更新 queue 指向新表
+            try {
+              await base44.asServiceRole.entities.TableQueue.update(queue.id, {
+                active_table_id: newTable.id
+              });
+              table = newTable;
+            } catch (e) {
+              log(`UPDATE_QUEUE_FAILED: ${e.message}, retrying...`);
+              // 更新失败，可能是乐观锁冲突，重新自旋
+            }
+          }
+        } else {
+          log(`EXISTING_TABLE_UNAVAILABLE: Table finished or missing, creating new`);
+          const newTable = await base44.asServiceRole.entities.Table.create({
+            table_number: determinedTableNumber,
+            status: 'waiting',
+            current_level: 2,
+            game_state: { seats: [], status: 'waiting' }
+          });
+          log(`NEW_TABLE_CREATED: ${newTable.id}`);
+          
+          try {
+            await base44.asServiceRole.entities.TableQueue.update(queue.id, {
+              active_table_id: newTable.id
+            });
+            table = newTable;
+          } catch (e) {
+            log(`UPDATE_QUEUE_FAILED: ${e.message}, retrying...`);
+          }
+        }
       } else {
-        await base44.asServiceRole.entities.TableQueue.create({
+        // 没有 queue，需要创建
+        log(`NO_QUEUE: Creating new queue and table for #${determinedTableNumber}`);
+        
+        const newTable = await base44.asServiceRole.entities.Table.create({
           table_number: determinedTableNumber,
-          active_table_id: table.id
+          status: 'waiting',
+          current_level: 2,
+          game_state: { seats: [], status: 'waiting' }
         });
+        log(`TABLE_CREATED: ${newTable.id}`);
+        
+        try {
+          await base44.asServiceRole.entities.TableQueue.create({
+            table_number: determinedTableNumber,
+            active_table_id: newTable.id
+          });
+          table = newTable;
+        } catch (e) {
+          log(`CREATE_QUEUE_FAILED: ${e.message}, retrying...`);
+          // 创建 queue 失败，可能是并发冲突，重新自旋
+        }
       }
-    }
-  } else {
-    // 自动分配 - 查找最有可能的候选表
-    log(`AUTO_FIND: Looking for available table...`);
-    const allQueues = await base44.asServiceRole.entities.TableQueue.filter({});
-    
-    for (const q of allQueues.sort((a, b) => a.table_number - b.table_number)) {
-      const t = await base44.asServiceRole.entities.Table.get(q.active_table_id);
-      if (t && t.status === 'waiting') {
-        const seats = t.game_state?.seats || [];
-        if (seats.length < 4 && !seats.find(s => s.klaw_id === klawId)) {
-          log(`TABLE_SELECTED: Using table #${q.table_number} (${seats.length}/4 seats)`);
-          table = t;
-          break;
+    } else {
+      // 自动分配
+      log(`AUTO_FIND: Looking for available table...`);
+      const allQueues = await base44.asServiceRole.entities.TableQueue.filter({});
+      
+      for (const q of allQueues.sort((a, b) => a.table_number - b.table_number)) {
+        try {
+          const t = await base44.asServiceRole.entities.Table.get(q.active_table_id);
+          if (t && t.status === 'waiting') {
+            const seats = t.game_state?.seats || [];
+            if (seats.length < 4 && !seats.find(s => s.klaw_id === klawId)) {
+              log(`TABLE_SELECTED: Using table #${q.table_number} (${seats.length}/4 seats)`);
+              table = t;
+              break;
+            }
+          }
+        } catch (e) {
+          log(`TABLE_NOT_FOUND: ${e.message}, skipping...`);
+        }
+      }
+      
+      if (!table) {
+        // 创建新表
+        const usedNumbers = new Set(allQueues.map(q => q.table_number));
+        let nextNumber = null;
+        for (let n = 1; n <= 25; n++) {
+          if (!usedNumbers.has(n)) { nextNumber = n; break; }
+        }
+        if (nextNumber === null) {
+          log(`ERROR: Lobby full`);
+          return Response.json({ error: 'Regular lobby is full. Try again later.', logs }, { status: 503 });
+        }
+        
+        log(`CREATE_NEW_TABLE: Creating new table #${nextNumber}`);
+        const newTable = await base44.asServiceRole.entities.Table.create({
+          table_number: nextNumber,
+          status: 'waiting',
+          current_level: 2,
+          game_state: { seats: [], status: 'waiting' }
+        });
+        log(`TABLE_CREATED: ${newTable.id}`);
+        
+        try {
+          await base44.asServiceRole.entities.TableQueue.create({
+            table_number: nextNumber,
+            active_table_id: newTable.id
+          });
+          table = newTable;
+        } catch (e) {
+          log(`CREATE_QUEUE_FAILED: ${e.message}, retrying...`);
         }
       }
     }
-    
-    if (!table) {
-      // 创建新表，找一个未使用的桌号
-      const usedNumbers = new Set(allQueues.map(q => q.table_number));
-      let nextNumber = null;
-      for (let n = 1; n <= 25; n++) {
-        if (!usedNumbers.has(n)) { nextNumber = n; break; }
-      }
-      if (nextNumber === null) {
-        log(`ERROR: Lobby full`);
-        return Response.json({ error: 'Regular lobby is full. Try again later.', logs }, { status: 503 });
-      }
-      log(`CREATE_NEW_TABLE: Creating new table #${nextNumber}`);
-      table = await base44.asServiceRole.entities.Table.create({
-        table_number: nextNumber,
-        status: 'waiting',
-        current_level: 2,
-        game_state: { seats: [], status: 'waiting' }
-      });
-      log(`TABLE_CREATED: ${table.id}`);
-      
-      await base44.asServiceRole.entities.TableQueue.create({
-        table_number: nextNumber,
-        active_table_id: table.id
-      });
+
+    if (!table && spinAttempts < 10) {
+      log(`SPIN_SLEEP: Waiting before retry...`);
+      await new Promise(r => setTimeout(r, 50 * spinAttempts));
     }
+  }
+
+  if (!table) {
+    log(`ERROR: Failed to obtain table after ${spinAttempts} attempts`);
+    return Response.json({ error: 'Failed to obtain table', logs }, { status: 500 });
   }
 
   // 尝试入座
