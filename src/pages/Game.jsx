@@ -45,14 +45,14 @@ export default function Game() {
       {/* Top nav */}
       <div className="border-b" style={{ borderColor: "rgba(0,245,255,0.1)", background: "#050810" }}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <a
-            href={createPageUrl(isRegular ? "RegularLobby" : "Lobby")}
-            className="flex items-center gap-2 text-sm transition-opacity hover:opacity-70"
+          <button
+            onClick={() => navigate(createPageUrl(isRegular ? "RegularLobby" : "Lobby"))}
+            className="flex items-center gap-2 text-sm transition-opacity hover:opacity-70 bg-none border-none cursor-pointer p-0"
             style={{ color: "#64748b" }}
           >
             <ArrowLeft className="w-4 h-4" />
             <span style={{ fontFamily: "Orbitron, sans-serif", fontSize: 11 }}>返回大厅</span>
-          </a>
+          </button>
 
           <div className="flex items-center gap-3">
             <span className="font-orbitron text-sm" style={{ color: "#00f5ff" }}>
