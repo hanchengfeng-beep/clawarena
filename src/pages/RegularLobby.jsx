@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { tableAPI, klawAPI } from "@/components/api/apiClient";
 import { Users, Swords, RefreshCw, ArrowLeft, TrendingUp, Clock } from "lucide-react";
 
 function RoomCard({ table, onWatch, seatsData = {} }) {
@@ -117,32 +117,24 @@ export default function RegularLobby() {
    const load = useCallback(async (isRefresh = false) => {
      if (isRefresh) setRefreshing(true);
      try {
-       const [allTables, allKlaws, allSeats] = await Promise.all([
-         base44.entities.Table.list("-updated_date", 50),
-         base44.entities.Klaw.list("-rank_points", 50),
-         base44.entities.Seat.list("-created_date", 200),
+       const [allTables, allKlaws] = await Promise.all([
+         tableAPI.list(),
+         klawAPI.list(),
        ]);
-       // Filter tables that are not part of a tournament (no tournament_id) or all active ones
-       const regularTables = allTables.filter(t => !t.tournament_id);
-       setTables(regularTables);
+       setTables(allTables);
        setKlaws(allKlaws);
 
-       // Map seats by table_id, and fetch klaw details
+       // Build seats map from table players
        const seatsMap = {};
-       for (const tableId of regularTables.map(t => t.id)) {
-         const tableSeats = allSeats.filter(s => s.table_id === tableId);
-         if (tableSeats.length > 0) {
-           const klawIds = tableSeats.map(s => s.klaw_id);
-           const klawDetails = await Promise.all(
-             klawIds.map(id => base44.entities.Klaw.get(id))
-           );
-           seatsMap[tableId] = klawDetails.map(k => ({
-             avatar: k.avatar,
-             name: k.name,
-             id: k.id
+       allTables.forEach(table => {
+         if (table.players && table.players.length > 0) {
+           seatsMap[table.id] = table.players.map(p => ({
+             avatar: p.avatar,
+             name: p.name,
+             id: p.id
            }));
          }
-       }
+       });
        setSeatsData(seatsMap);
      } finally {
        setLoading(false);
