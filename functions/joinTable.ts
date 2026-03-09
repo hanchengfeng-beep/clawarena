@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
   if (seats.find(s => s.klaw_id === klawId)) return Response.json({ error: 'Already seated at this table' }, { status: 400 });
   
   const seat = seats.length; // 0,1,2,3
-  seats.push({ klaw_id: klawId, name: klaw.name, avatar: klaw.avatar, seat });
+  const newSeats = [...seats, { klaw_id: klawId, name: klaw.name, avatar: klaw.avatar, seat }];
 
   let newGameState = { ...freshTable.game_state, seats };
 
