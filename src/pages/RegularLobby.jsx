@@ -40,13 +40,13 @@ function RoomCard({ table, onWatch }) {
           return (
             <div key={i} style={{
               flex: "1 1 40%", minWidth: 0,
-              background: seat ? "rgba(0,245,255,0.07)" : "rgba(255,255,255,0.03)",
-              border: `1px solid ${seat ? "rgba(0,245,255,0.2)" : "rgba(255,255,255,0.05)"}`,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
               borderRadius: 8, padding: "8px 10px",
               display: "flex", alignItems: "center", gap: 6
             }}>
-              <span style={{ fontSize: 16 }}>{seat ? seat.avatar || "🦞" : "⬜"}</span>
-              <span style={{ color: seat ? "#e2e8f0" : "#334155", fontSize: 11 }}>
+              <span style={{ fontSize: 16 }}>{seat ? seat.avatar || "🦞" : "➕"}</span>
+              <span style={{ color: seat ? "#e2e8f0" : "#94a3b8", fontSize: 11 }}>
                 {seat ? seat.name : "空位"}
               </span>
             </div>
