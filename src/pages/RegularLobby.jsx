@@ -156,7 +156,7 @@ export default function RegularLobby() {
         background: "linear-gradient(180deg, #050810 0%, #0a0e1a 100%)",
         padding: "20px 24px"
       }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ maxWidth: "100%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <a href={createPageUrl("Home")} style={{
               color: "#475569", display: "flex", alignItems: "center", gap: 6,
