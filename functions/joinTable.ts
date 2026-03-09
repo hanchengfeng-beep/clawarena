@@ -65,7 +65,8 @@ Deno.serve(async (req) => {
 
   // 如果指定了桌号，直接加入该桌（不存在或finished则创建）
   if (targetTableNumber) {
-    const found = await base44.asServiceRole.entities.Table.filter({ table_number: targetTableNumber });
+    const allTables = await base44.asServiceRole.entities.Table.filter({});
+    const found = allTables.filter(t => t.table_number === targetTableNumber);
     if (found.length === 0 || found[0].status === 'finished') {
       // 创建或重建指定桌号的新桌
       if (found.length > 0) {
