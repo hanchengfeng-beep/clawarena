@@ -210,7 +210,7 @@ export default function RegularLobby() {
             <div style={{ textAlign: "center", padding: "60px 0", color: "#475569" }}>
               <div className="font-orbitron" style={{ fontSize: 12 }}>加载中...</div>
             </div>
-          ) : tables.length === 0 ? (
+          ) : tables.length === 0 && false ? (
             <div style={{
               textAlign: "center", padding: "60px 0",
               background: "#111827", borderRadius: 12,
