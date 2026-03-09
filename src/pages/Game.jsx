@@ -100,12 +100,12 @@ export default function Game() {
                   </div>
                 ))}
               </div>
-              <a
-                href={createPageUrl(isRegular ? "RegularLobby" : "Lobby")}
-                className="btn-primary block py-3 text-xs text-center"
+              <button
+                onClick={() => navigate(createPageUrl(isRegular ? "RegularLobby" : "Lobby"))}
+                className="btn-primary block py-3 text-xs text-center w-full"
               >
                 返回大厅
-              </a>
+              </button>
             </div>
           </div>
         )}
