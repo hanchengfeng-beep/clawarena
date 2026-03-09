@@ -119,10 +119,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Regular lobby is full (max 25 tables). Try again later.' }, { status: 503 });
     }
     
-    // 创建前再次检查该号桌是否已被其他并发请求创建
-    const recheck = allRegularTables.filter(t => t.table_number === nextNumber && t.status !== 'finished');
-    if (recheck.length > 0) {
-      table = recheck[0];
+    // 创建前再次从数据库查询该号桌（防止并发冲突）
+    const freshCheck = await base44.asServiceRole.entities.Table.filter({});
+    const recheckTable = freshCheck.filter(t => t.table_number === nextNumber && t.status !== 'finished');
+    if (recheckTable.length > 0) {
+      table = recheckTable[0];
     } else {
       // 新建固定编号桌
       table = await base44.asServiceRole.entities.Table.create({
