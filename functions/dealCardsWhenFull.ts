@@ -41,25 +41,21 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
   try {
-    const payload = await req.json();
-    const { event, data } = payload;
+     const payload = await req.json();
+     const { event, data } = payload;
 
-    // Only trigger on Seat creation
-    if (event.type !== 'create' || event.entity_name !== 'Seat') {
-      return Response.json({ message: 'Skipped: not a Seat creation event' });
-    }
+     // Only trigger on Table update
+     if (event.type !== 'update' || event.entity_name !== 'Table') {
+       return Response.json({ message: 'Skipped: not a Table update event' });
+     }
 
-    const newSeat = data;
-    const tableId = newSeat.table_id;
+     const tableId = event.entity_id;
+     const table = data;
 
-    // Get table and all seats
-    const table = await base44.asServiceRole.entities.Table.get(tableId);
-    const allSeats = await base44.asServiceRole.entities.Seat.filter({ table_id: tableId });
-
-    // If not exactly 4 seats, skip
-    if (allSeats.length !== 4) {
-      return Response.json({ message: `Table has ${allSeats.length} seats, not 4 yet` });
-    }
+     // If not in waiting status, skip (could be already playing/dealing)
+     if (!table.players || table.players.length !== 4) {
+       return Response.json({ message: `Table has ${table.players?.length || 0} players, not 4 yet` });
+     }
 
     // If table is already playing/dealing, skip
     if (table.status === 'playing' || table.status === 'dealing') {
