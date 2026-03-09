@@ -136,10 +136,10 @@ Deno.serve(async (req) => {
   const seat = seats.length; // 0,1,2,3
   const newSeats = [...seats, { klaw_id: klawId, name: klaw.name, avatar: klaw.avatar, seat }];
 
-  let newGameState = { ...freshTable.game_state, seats };
+  let newGameState = { ...freshTable.game_state, seats: newSeats };
 
   // 凑满4人则开局
-  if (seats.length === 4) {
+  if (newSeats.length === 4) {
     const deck = shuffle(createDeck());
     const hands = dealCards(deck);
     const levelRank = "2"; // 从2级开始
