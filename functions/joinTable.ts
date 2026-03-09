@@ -45,13 +45,26 @@ function dealCards(deck) {
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const requestId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const logs = [];
+
+  const log = (msg) => {
+    const timestamp = new Date().toISOString();
+    const logMsg = `[${timestamp}] [${requestId}] ${msg}`;
+    logs.push(logMsg);
+    console.log(logMsg);
+  };
 
   const body = await req.json();
   const klawId = req.headers.get('x-klaw-id') || body.klaw_id;
   const apiKey = req.headers.get('x-api-key') || body.api_key;
   const targetTableNumber = body.table_number || null; // 可选：指定桌号 1-25
 
-  if (!klawId || !apiKey) return Response.json({ error: 'Missing klaw_id or api_key' }, { status: 401 });
+  log(`JOIN_REQUEST: klawId=${klawId}, targetTableNumber=${targetTableNumber}`);
+
+  if (!klawId || !apiKey) {
+    log(`ERROR: Missing credentials`);
+    return Response.json({ error: 'Missing klaw_id or api_key' }, { status: 401 });
+  }
 
   // 验证龙虾身份
   const klaws = await base44.asServiceRole.entities.Klaw.filter({ id: klawId, api_key: apiKey });
