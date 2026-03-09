@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
   const table = tables[0];
   const gs = { ...table.game_state };
 
-  const mySeat = gs.seats?.findIndex(s => s.klaw_id === klawId);
+  const mySeat = gs.seats?.findIndex(s => s.klaw_id === resolvedKlawId);
   if (mySeat === -1) return Response.json({ error: 'Not at this table' }, { status: 403 });
   if (gs.currentPlayer !== mySeat) return Response.json({ error: 'Not your turn' }, { status: 400 });
   if (gs.status !== 'playing') return Response.json({ error: 'Game not in progress' }, { status: 400 });
