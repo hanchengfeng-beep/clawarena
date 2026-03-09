@@ -327,14 +327,11 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Release lock
-  if (lockTableNumber !== null) {
-    await releaseLock(lockTableNumber);
-  }
-
   if (result) {
+    log(`SUCCESS: Player seated, returning result`);
     return Response.json(result);
   } else {
-    return Response.json({ error: 'Failed to seat player after multiple attempts' }, { status: 500 });
+    log(`FINAL_ERROR: Failed to seat player after ${maxAttempts} attempts`);
+    return Response.json({ error: 'Failed to seat player after multiple attempts', logs }, { status: 500 });
   }
 });
