@@ -125,50 +125,57 @@ Deno.serve(async (req) => {
   }
 
   let table = null;
-  let lockTableNumber = null;
 
   // 如果指定了桌号，直接查找或创建该桌
   if (targetTableNumber) {
-    lockTableNumber = targetTableNumber;
-    if (!await acquireLock(lockTableNumber)) {
-      return Response.json({ error: 'Failed to acquire table lock' }, { status: 503 });
-    }
-
+    log(`FIND_OR_CREATE_TABLE: Looking for table #${targetTableNumber}`);
+    
     // 查找该桌号的所有表
     const allTables = await base44.asServiceRole.entities.Table.filter({ table_number: targetTableNumber });
     const waitingTables = allTables.filter(t => t.status === 'waiting');
+    log(`FOUND_TABLES: ${waitingTables.length} waiting table(s) for #${targetTableNumber}`);
     
     // 如果有多个 waiting 表，合并到第一个，删除其他
     if (waitingTables.length > 1) {
+      log(`CONSOLIDATING: Multiple waiting tables detected, merging...`);
       table = waitingTables[0];
       for (let i = 1; i < waitingTables.length; i++) {
         try {
+          log(`DELETE_DUPLICATE: Removing duplicate table ${waitingTables[i].id}`);
           await base44.asServiceRole.entities.Table.delete(waitingTables[i].id);
         } catch (e) {
-          // 忽略
+          log(`DELETE_DUPLICATE_FAILED: ${e.message}`);
         }
       }
     } else if (waitingTables.length === 1) {
+      log(`TABLE_FOUND: Using existing table ${waitingTables[0].id}`);
       table = waitingTables[0];
     } else {
       // 没有 waiting 表，创建新的
+      log(`CREATE_TABLE: No waiting table found, creating new table #${targetTableNumber}`);
       table = await base44.asServiceRole.entities.Table.create({
         table_number: targetTableNumber,
         status: 'waiting',
         current_level: 2,
         game_state: { seats: [], status: 'waiting' }
       });
+      log(`TABLE_CREATED: ${table.id}`);
     }
   } else {
     // 自动找一个等待中且有空位的桌子
+    log(`AUTO_FIND: Looking for any available table...`);
     const allTables = await base44.asServiceRole.entities.Table.filter({});
+    log(`TOTAL_TABLES: ${allTables.length} tables exist`);
+    
     const regularWaitingTables = allTables
       .filter(t => !t.tournament_id && t.status === 'waiting' && t.table_number >= 1 && t.table_number <= 25)
       .sort((a, b) => a.table_number - b.table_number);
+    log(`WAITING_TABLES: ${regularWaitingTables.length} waiting tables available`);
     
     for (const t of regularWaitingTables) {
       const seats = t.game_state?.seats || [];
       if (seats.length < 4 && !seats.find(s => s.klaw_id === klawId)) {
+        log(`TABLE_SELECTED: Using table #${t.table_number} (${seats.length}/4 seats)`);
         table = t;
         break;
       }
@@ -183,20 +190,18 @@ Deno.serve(async (req) => {
         if (!usedNumbers.has(n)) { nextNumber = n; break; }
       }
       if (nextNumber === null) {
-        return Response.json({ error: 'Regular lobby is full (max 25 tables). Try again later.' }, { status: 503 });
+        log(`ERROR: Lobby full, no available table numbers`);
+        return Response.json({ error: 'Regular lobby is full (max 25 tables). Try again later.', logs }, { status: 503 });
       }
       
-      lockTableNumber = nextNumber;
-      if (!await acquireLock(lockTableNumber)) {
-        return Response.json({ error: 'Failed to acquire table lock' }, { status: 503 });
-      }
-      
+      log(`CREATE_NEW_TABLE: No suitable table found, creating #${nextNumber}`);
       table = await base44.asServiceRole.entities.Table.create({
         table_number: nextNumber,
         status: 'waiting',
         current_level: 2,
         game_state: { seats: [], status: 'waiting' }
       });
+      log(`TABLE_CREATED: ${table.id} (#${nextNumber})`);
     }
   }
   
