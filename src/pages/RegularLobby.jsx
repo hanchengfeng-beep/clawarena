@@ -113,7 +113,7 @@ export default function RegularLobby() {
     if (isRefresh) setRefreshing(true);
     try {
       const [allTables, allKlaws] = await Promise.all([
-        base44.entities.Table.list("-updated_date", 20),
+        base44.entities.Table.list("-updated_date", 50),
         base44.entities.Klaw.list("-rank_points", 50),
       ]);
       // Filter tables that are not part of a tournament (no tournament_id) or all active ones
@@ -139,6 +139,11 @@ export default function RegularLobby() {
   const activeTables = tables.filter(t => t.status === "playing");
   const waitingTables = tables.filter(t => t.status === "waiting");
   const finishedTables = tables.filter(t => t.status === "finished");
+
+  // 补足25格，不足的用空占位
+  const MAX_SLOTS = 25;
+  const emptySlots = Math.max(0, MAX_SLOTS - activeTables.length - waitingTables.length);
+  const emptyCards = Array.from({ length: emptySlots }).map((_, i) => ({ id: `empty-${i}`, empty: true }));
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a0e1a" }}>
