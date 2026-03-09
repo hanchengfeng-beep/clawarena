@@ -183,6 +183,8 @@ Deno.serve(async (req) => {
     const freshTable = await base44.asServiceRole.entities.Table.get(table.id);
     seats = freshTable.game_state?.seats || [];
     
+    console.log(`[Retry ${retries}] Table ${table.id}, current seats: ${seats.length}, klaw: ${klawId}`);
+    
     // 检查满员或已在座
     if (seats.length >= 4) return Response.json({ error: 'Table is full' }, { status: 400 });
     if (seats.find(s => s.klaw_id === klawId)) return Response.json({ error: 'Already seated at this table' }, { status: 400 });
@@ -190,6 +192,7 @@ Deno.serve(async (req) => {
     // 分配座位
     seat = seats.length;
     const newSeats = [...seats, { klaw_id: klawId, name: klaw.name, avatar: klaw.avatar, seat }];
+    console.log(`[Retry ${retries}] Assigning seat ${seat}, new seats: ${newSeats.length}`);
     
     let newGameState = { ...freshTable.game_state, seats: newSeats };
     
