@@ -133,89 +133,112 @@ Deno.serve(async (req) => {
     }
   }
   
-  // 验证桌的可用性
-  if (table.status !== 'waiting') {
-    return Response.json({ error: `Table is not available (status: ${table.status})` }, { status: 400 });
-  }
-  let seats = table.game_state?.seats || [];
-  if (seats.length >= 4) {
-    return Response.json({ error: 'Table is full' }, { status: 400 });
-  }
-  if (seats.find(s => s.klaw_id === klawId)) {
-    return Response.json({ error: 'Already seated at this table' }, { status: 400 });
-  }
+  // 尝试入座，如果失败则重试（因为可能有并发冲突）
+  const maxAttempts = 15;
+  let attempt = 0;
+  let result = null;
 
-  // 入座前重新读取最新的桌数据（防止并发冲突）
-  const freshTable = await base44.asServiceRole.entities.Table.get(table.id);
-  seats = freshTable.game_state?.seats || [];
-  // 检查满员或已在座
-  if (seats.length >= 4) return Response.json({ error: 'Table is full' }, { status: 400 });
-  if (seats.find(s => s.klaw_id === klawId)) return Response.json({ error: 'Already seated at this table' }, { status: 400 });
-  
-  const seat = seats.length; // 0,1,2,3
-  const newSeats = [...seats, { klaw_id: klawId, name: klaw.name, avatar: klaw.avatar, seat }];
+  while (attempt < maxAttempts && !result) {
+    attempt++;
 
-  let newGameState = { ...freshTable.game_state, seats: newSeats };
-
-  // 凑满4人则开局
-  if (newSeats.length === 4) {
-    const deck = shuffle(createDeck());
-    const hands = dealCards(deck);
-    const levelRank = "2"; // 从2级开始
-
-    newGameState = {
-      status: 'playing',
-      seats: newSeats,
-      hands: hands.map((h, i) => ({ seat: i, klaw_id: newSeats[i].klaw_id, cards: h })),
-      currentPlayer: 0,
-      lastPlay: [],
-      lastPlaySeat: null,
-      passCount: 0,
-      roundPlays: {},
-      finishOrder: [],
-      levelRank,
-      currentLevel: 2,
-      turnStartedAt: Date.now(),
-      gameLog: [`游戏开始！级牌：${levelRank}`]
-    };
-
-    // 更新所有龙虾状态为 playing
-    for (const s of newSeats) {
-      await base44.asServiceRole.entities.Klaw.update(s.klaw_id, {
-        status: 'playing',
-        current_table_id: table.id
-      });
+    // 每次尝试都重新读取表状态
+    const freshTable = await base44.asServiceRole.entities.Table.get(table.id);
+    
+    // 检查表是否仍然是 waiting 状态
+    if (freshTable.status !== 'waiting') {
+      return Response.json({ error: `Table is not available (status: ${freshTable.status})` }, { status: 400 });
     }
 
-    await base44.asServiceRole.entities.Table.update(table.id, {
-      status: 'playing',
-      game_state: newGameState
-    });
+    const seats = freshTable.game_state?.seats || [];
 
-    return Response.json({
-      table_id: table.id,
-      seat,
-      status: 'playing',
-      message: 'Game started! 4 klaws seated.',
-      your_hand: newGameState.hands[seat].cards,
-      level_rank: levelRank,
-      current_player_seat: 0
-    });
+    // 检查满员或已在座
+    if (seats.length >= 4) {
+      return Response.json({ error: 'Table is full' }, { status: 400 });
+    }
+    if (seats.find(s => s.klaw_id === klawId)) {
+      return Response.json({ error: 'Already seated at this table' }, { status: 400 });
+    }
+
+    // 准备新座位数据
+    const seat = seats.length;
+    const newSeats = [...seats, { klaw_id: klawId, name: klaw.name, avatar: klaw.avatar, seat }];
+    let newGameState = { ...freshTable.game_state, seats: newSeats };
+    let updatePayload = { game_state: newGameState };
+
+    // 凑满4人则开局
+    if (newSeats.length === 4) {
+      const deck = shuffle(createDeck());
+      const hands = dealCards(deck);
+      const levelRank = "2";
+
+      newGameState = {
+        status: 'playing',
+        seats: newSeats,
+        hands: hands.map((h, i) => ({ seat: i, klaw_id: newSeats[i].klaw_id, cards: h })),
+        currentPlayer: 0,
+        lastPlay: [],
+        lastPlaySeat: null,
+        passCount: 0,
+        roundPlays: {},
+        finishOrder: [],
+        levelRank,
+        currentLevel: 2,
+        turnStartedAt: Date.now(),
+        gameLog: [`游戏开始！级牌：${levelRank}`]
+      };
+
+      updatePayload = { status: 'playing', game_state: newGameState };
+    }
+
+    // 尝试更新表
+    try {
+      await base44.asServiceRole.entities.Table.update(table.id, updatePayload);
+      
+      // 更新龙虾状态
+      await base44.asServiceRole.entities.Klaw.update(klawId, {
+        status: newSeats.length === 4 ? 'playing' : 'waiting',
+        current_table_id: table.id
+      });
+
+      // 如果游戏开始，更新其他龙虾
+      if (newSeats.length === 4) {
+        for (const s of newSeats) {
+          if (s.klaw_id !== klawId) {
+            await base44.asServiceRole.entities.Klaw.update(s.klaw_id, {
+              status: 'playing',
+              current_table_id: table.id
+            });
+          }
+        }
+
+        result = {
+          table_id: table.id,
+          seat,
+          status: 'playing',
+          message: 'Game started! 4 klaws seated.',
+          your_hand: newGameState.hands[seat].cards,
+          level_rank: newGameState.levelRank,
+          current_player_seat: 0
+        };
+      } else {
+        result = {
+          table_id: table.id,
+          seat,
+          status: 'waiting',
+          message: `Waiting for players... ${newSeats.length}/4`
+        };
+      }
+    } catch (e) {
+      // 更新失败（并发冲突），等待并重试
+      if (attempt < maxAttempts) {
+        await new Promise(r => setTimeout(r, 10 * attempt));
+      }
+    }
   }
 
-  // 还没满人，继续等待
-  await base44.asServiceRole.entities.Klaw.update(klawId, {
-    status: 'waiting',
-    current_table_id: table.id
-  });
-  await base44.asServiceRole.entities.Table.update(table.id, {
-    game_state: newGameState
-  });
-
-  return Response.json({
-    table_id: table.id,
-    seat,
-    status: 'waiting',
-    message: `Waiting for players... ${newSeats.length}/4`
-  });
+  if (result) {
+    return Response.json(result);
+  } else {
+    return Response.json({ error: 'Failed to seat player after multiple attempts' }, { status: 500 });
+  }
 });
