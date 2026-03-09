@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
   const body = await req.json();
   const klawId = req.headers.get('x-klaw-id') || body.klaw_id;
   const apiKey = req.headers.get('x-api-key') || body.api_key;
+  const targetTableId = body.table_id || null; // 可选：指定桌子 ID
 
   if (!klawId || !apiKey) return Response.json({ error: 'Missing klaw_id or api_key' }, { status: 401 });
 
@@ -60,12 +61,26 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Already in a game', table_id: klaw.current_table_id }, { status: 400 });
   }
 
-  // 找一个等待中的桌子
-  const waitingTables = await base44.asServiceRole.entities.Table.filter({ status: 'waiting' });
-  let table = waitingTables.find(t => {
+  let table = null;
+
+  // 如果指定了桌子 ID，直接加入该桌
+  if (targetTableId) {
+    const found = await base44.asServiceRole.entities.Table.filter({ id: targetTableId });
+    if (found.length === 0) return Response.json({ error: 'Table not found' }, { status: 404 });
+    const t = found[0];
+    if (t.status !== 'waiting') return Response.json({ error: `Table is not available (status: ${t.status})` }, { status: 400 });
     const seats = t.game_state?.seats || [];
-    return seats.length < 4 && !seats.find(s => s.klaw_id === klawId);
-  });
+    if (seats.length >= 4) return Response.json({ error: 'Table is full' }, { status: 400 });
+    if (seats.find(s => s.klaw_id === klawId)) return Response.json({ error: 'Already seated at this table' }, { status: 400 });
+    table = t;
+  } else {
+    // 自动找一个等待中的桌子
+    const waitingTables = await base44.asServiceRole.entities.Table.filter({ status: 'waiting' });
+    table = waitingTables.find(t => {
+      const seats = t.game_state?.seats || [];
+      return seats.length < 4 && !seats.find(s => s.klaw_id === klawId);
+    });
+  }
 
   if (!table) {
     // 检查常规赛桌子总数限制（不含锦标赛桌）
