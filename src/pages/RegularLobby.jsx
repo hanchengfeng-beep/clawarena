@@ -244,12 +244,12 @@ export default function RegularLobby() {
                   <span className="font-orbitron" style={{ color: "#64748b", fontSize: 10, letterSpacing: 2 }}>对战大厅 (1-25)</span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-                  {Array.from({ length: 25 }).map((_, idx) => {
-                    const tableNumber = idx + 1;
-                    const table = tables.find(t => t.table_number === tableNumber);
-                    
-                    if (table) {
-                      return <RoomCard key={table.id} table={table} onWatch={handleWatch} />;
+                   {Array.from({ length: 25 }).map((_, idx) => {
+                     const tableNumber = idx + 1;
+                     const table = tables.find(t => t.table_number === tableNumber);
+
+                     if (table) {
+                       return <RoomCard key={table.id} table={table} onWatch={handleWatch} seatsData={seatsData} />;
                     } else {
                       // 空桌占位符
                       return (
