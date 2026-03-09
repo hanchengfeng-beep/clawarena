@@ -212,33 +212,41 @@ Deno.serve(async (req) => {
 
   while (attempt < maxAttempts && !result) {
     attempt++;
+    log(`SEAT_ATTEMPT: ${attempt}/${maxAttempts}`);
 
     // 每次尝试都重新读取表状态
     const freshTable = await base44.asServiceRole.entities.Table.get(table.id);
+    log(`TABLE_STATE_REFRESHED: status=${freshTable.status}, seats=${freshTable.game_state?.seats?.length || 0}`);
     
     // 检查表是否仍然是 waiting 状态
     if (freshTable.status !== 'waiting') {
-      return Response.json({ error: `Table is not available (status: ${freshTable.status})` }, { status: 400 });
+      log(`ERROR: Table status changed to ${freshTable.status}`);
+      return Response.json({ error: `Table is not available (status: ${freshTable.status})`, logs }, { status: 400 });
     }
 
     const seats = freshTable.game_state?.seats || [];
 
     // 检查满员或已在座
     if (seats.length >= 4) {
-      return Response.json({ error: 'Table is full' }, { status: 400 });
+      log(`ERROR: Table is full (${seats.length} seats)`);
+      return Response.json({ error: 'Table is full', logs }, { status: 400 });
     }
     if (seats.find(s => s.klaw_id === klawId)) {
-      return Response.json({ error: 'Already seated at this table' }, { status: 400 });
+      log(`ERROR: Klaw already seated at this table`);
+      return Response.json({ error: 'Already seated at this table', logs }, { status: 400 });
     }
 
     // 准备新座位数据
     const seat = seats.length;
     const newSeats = [...seats, { klaw_id: klawId, name: klaw.name, avatar: klaw.avatar, seat }];
+    log(`SEAT_ASSIGNMENT: seat=${seat}, total_seats=${newSeats.length}`);
+    
     let newGameState = { ...freshTable.game_state, seats: newSeats };
     let updatePayload = { game_state: newGameState };
 
     // 凑满4人则开局
     if (newSeats.length === 4) {
+      log(`GAME_START: 4 players seated, starting game`);
       const deck = shuffle(createDeck());
       const hands = dealCards(deck);
       const levelRank = "2";
@@ -264,16 +272,21 @@ Deno.serve(async (req) => {
 
     // 尝试更新表
     try {
+      log(`UPDATE_TABLE: Attempting to update table...`);
       await base44.asServiceRole.entities.Table.update(table.id, updatePayload);
+      log(`UPDATE_TABLE_SUCCESS: Table updated`);
       
       // 更新龙虾状态
+      log(`UPDATE_KLAW: Updating klaw status...`);
       await base44.asServiceRole.entities.Klaw.update(klawId, {
         status: newSeats.length === 4 ? 'playing' : 'waiting',
         current_table_id: table.id
       });
+      log(`UPDATE_KLAW_SUCCESS: Klaw status updated`);
 
       // 如果游戏开始，更新其他龙虾
       if (newSeats.length === 4) {
+        log(`UPDATE_OTHER_KLAWS: Updating other 3 players...`);
         for (const s of newSeats) {
           if (s.klaw_id !== klawId) {
             await base44.asServiceRole.entities.Klaw.update(s.klaw_id, {
@@ -282,6 +295,7 @@ Deno.serve(async (req) => {
             });
           }
         }
+        log(`UPDATE_OTHER_KLAWS_SUCCESS: All players updated`);
 
         result = {
           table_id: table.id,
@@ -290,20 +304,25 @@ Deno.serve(async (req) => {
           message: 'Game started! 4 klaws seated.',
           your_hand: newGameState.hands[seat].cards,
           level_rank: newGameState.levelRank,
-          current_player_seat: 0
+          current_player_seat: 0,
+          logs
         };
       } else {
         result = {
           table_id: table.id,
           seat,
           status: 'waiting',
-          message: `Waiting for players... ${newSeats.length}/4`
+          message: `Waiting for players... ${newSeats.length}/4`,
+          logs
         };
       }
     } catch (e) {
+      log(`UPDATE_FAILED: Attempt ${attempt} failed - ${e.message}`);
       // 更新失败（并发冲突），等待并重试
       if (attempt < maxAttempts) {
-        await new Promise(r => setTimeout(r, 10 * attempt));
+        const waitTime = 10 * attempt;
+        log(`RETRY_WAIT: Waiting ${waitTime}ms before retry...`);
+        await new Promise(r => setTimeout(r, waitTime));
       }
     }
   }
