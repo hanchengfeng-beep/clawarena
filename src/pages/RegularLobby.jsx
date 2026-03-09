@@ -56,7 +56,7 @@ function RoomCard({ table, onWatch }) {
 
       {/* Footer */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "#94a3b8", fontSize: 11 }}>
+        <span style={{ color: "#cbd5e1", fontSize: 11 }}>
           {seats.length}/4 龙虾入座
         </span>
         {(table.status === "playing" || table.status === "waiting") && (
