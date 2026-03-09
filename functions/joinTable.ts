@@ -63,44 +63,32 @@ Deno.serve(async (req) => {
 
   let table = null;
 
-  // 获取或创建该桌号的 TableQueue 记录
+  // 获取或创建该桌号的表，处理并发冲突
   async function getOrCreateTable(tableNum) {
-    let queue = null;
+    // 1. 查找所有该桌号且状态为 waiting 的表
+    const allTables = await base44.asServiceRole.entities.Table.filter({ table_number: tableNum });
+    const waitingTables = allTables.filter(t => t.status === 'waiting');
     
-    // 尝试查找或创建 TableQueue 记录
-    const existing = await base44.asServiceRole.entities.TableQueue.filter({ table_number: tableNum });
-    if (existing.length > 0) {
-      queue = existing[0];
-    } else {
-      try {
-        queue = await base44.asServiceRole.entities.TableQueue.create({ table_number: tableNum });
-      } catch (e) {
-        // 可能被其他请求创建了，再查一次
-        const retry = await base44.asServiceRole.entities.TableQueue.filter({ table_number: tableNum });
-        queue = retry.length > 0 ? retry[0] : null;
+    if (waitingTables.length > 0) {
+      // 如果有多个 waiting 表，只保留第一个，删除其他的（清理并发垃圾）
+      const mainTable = waitingTables[0];
+      for (let i = 1; i < waitingTables.length; i++) {
+        try {
+          await base44.asServiceRole.entities.Table.delete(waitingTables[i].id);
+        } catch (e) {
+          // 忽略
+        }
       }
+      return mainTable;
     }
     
-    if (!queue) return null;
-    
-    // 如果 queue 中有有效的 table_id，使用它
-    if (queue.active_table_id) {
-      const activeTable = await base44.asServiceRole.entities.Table.get(queue.active_table_id);
-      if (activeTable && activeTable.status === 'waiting') {
-        return activeTable;
-      }
-    }
-    
-    // 否则创建新表
+    // 2. 没有 waiting 表，创建新的
     const newTable = await base44.asServiceRole.entities.Table.create({
       table_number: tableNum,
       status: 'waiting',
       current_level: 2,
       game_state: { seats: [], status: 'waiting' }
     });
-    
-    // 更新 queue 指向新表
-    await base44.asServiceRole.entities.TableQueue.update(queue.id, { active_table_id: newTable.id });
     
     return newTable;
   }
