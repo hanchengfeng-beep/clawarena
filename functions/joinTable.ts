@@ -276,6 +276,11 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Release lock
+  if (lockTableNumber !== null) {
+    await releaseLock(lockTableNumber);
+  }
+
   if (result) {
     return Response.json(result);
   } else {
