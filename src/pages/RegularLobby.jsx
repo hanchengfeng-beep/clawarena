@@ -234,17 +234,39 @@ export default function RegularLobby() {
                   </div>
                 </div>
               )}
-              {waitingTables.length > 0 && (
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                    <div style={{ width: 3, height: 16, background: "#ffd700", borderRadius: 2 }} />
-                    <span className="font-orbitron" style={{ color: "#64748b", fontSize: 10, letterSpacing: 2 }}>等待玩家</span>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-                    {waitingTables.map(t => <RoomCard key={t.id} table={t} onWatch={handleWatch} />)}
-                  </div>
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <div style={{ width: 3, height: 16, background: "#ffd700", borderRadius: 2 }} />
+                  <span className="font-orbitron" style={{ color: "#64748b", fontSize: 10, letterSpacing: 2 }}>等待玩家</span>
+                  {waitingTables.length === 0 && emptySlots === MAX_SLOTS && (
+                    <span style={{ color: "#334155", fontSize: 10 }}>（暂无）</span>
+                  )}
                 </div>
-              )}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+                  {waitingTables.map(t => <RoomCard key={t.id} table={t} onWatch={handleWatch} />)}
+                  {emptyCards.map(e => (
+                    <div key={e.id} style={{
+                      background: "rgba(255,255,255,0.015)",
+                      border: "1px dashed rgba(255,255,255,0.06)",
+                      borderRadius: 12, padding: "18px",
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      gap: 8, minHeight: 140, opacity: 0.5
+                    }}>
+                      <span style={{ fontSize: 28, opacity: 0.3 }}>🦞</span>
+                      <span className="font-orbitron" style={{ color: "#334155", fontSize: 9, letterSpacing: 1 }}>空桌</span>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div key={i} style={{
+                            width: 28, height: 28, borderRadius: 6,
+                            background: "rgba(255,255,255,0.02)",
+                            border: "1px dashed rgba(255,255,255,0.04)"
+                          }} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
               {finishedTables.length > 0 && (
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
