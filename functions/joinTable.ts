@@ -82,59 +82,7 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Already in a game', table_id: klaw.current_table_id, logs }, { status: 400 });
   }
 
-  // 获取或创建一个 waiting 表（使用 TableQueue 管理）
-  async function getOrCreateWaitingTable(tableNum) {
-    log(`GET_OR_CREATE_TABLE: Looking for table #${tableNum}`);
-    
-    // 查询 TableQueue 获取该桌号的当前表
-    const queues = await base44.asServiceRole.entities.TableQueue.filter({ table_number: tableNum });
-    let activeTableId = null;
-    
-    if (queues.length > 0) {
-      const queue = queues[0];
-      activeTableId = queue.active_table_id;
-      log(`QUEUE_FOUND: active_table_id=${activeTableId}`);
-      
-      // 验证该表仍在 waiting 状态
-      if (activeTableId) {
-        const activeTable = await base44.asServiceRole.entities.Table.get(activeTableId);
-        if (activeTable.status === 'waiting') {
-          const seats = activeTable.game_state?.seats || [];
-          if (seats.length < 4) {
-            log(`TABLE_AVAILABLE: Using existing table with ${seats.length}/4 seats`);
-            return activeTable;
-          }
-        }
-        log(`TABLE_UNAVAILABLE: Active table is full or finished`);
-      }
-    }
-    
-    // 没有可用的 waiting 表，创建新的
-    log(`CREATE_NEW_TABLE: Creating new table #${tableNum}`);
-    const newTable = await base44.asServiceRole.entities.Table.create({
-      table_number: tableNum,
-      status: 'waiting',
-      current_level: 2,
-      game_state: { seats: [], status: 'waiting' }
-    });
-    log(`TABLE_CREATED: ${newTable.id}`);
-    
-    // 更新或创建 TableQueue 记录
-    if (queues.length > 0) {
-      log(`UPDATE_QUEUE: Updating queue to point to new table`);
-      await base44.asServiceRole.entities.TableQueue.update(queues[0].id, {
-        active_table_id: newTable.id
-      });
-    } else {
-      log(`CREATE_QUEUE: Creating new queue entry for table #${tableNum}`);
-      await base44.asServiceRole.entities.TableQueue.create({
-        table_number: tableNum,
-        active_table_id: newTable.id
-      });
-    }
-    
-    return newTable;
-  }
+
 
   let table = null;
   const determinedTableNumber = targetTableNumber || null;
