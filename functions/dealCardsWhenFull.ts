@@ -1,7 +1,7 @@
 /**
- * Entity Automation：Seat 创建时触发
- * 检查桌子是否满 4 人，满则发牌
- */
+  * Entity Automation：Table 更新时触发
+  * 检查桌子是否满 4 人，满则发牌
+  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const RANKS = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
