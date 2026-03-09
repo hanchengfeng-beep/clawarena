@@ -24,8 +24,8 @@ function RoomCard({ table, onWatch }) {
         </span>
         <span style={{
           background: isActive ? "rgba(0,245,255,0.1)" : "rgba(255,255,255,0.05)",
-          color: isActive ? "#00f5ff" : "#475569",
-          border: `1px solid ${isActive ? "rgba(0,245,255,0.3)" : "rgba(255,255,255,0.1)"}`,
+          color: isActive ? "#00f5ff" : "#94a3b8",
+          border: `1px solid ${isActive ? "rgba(0,245,255,0.3)" : "rgba(255,255,255,0.2)"}`,
           borderRadius: 20, padding: "2px 10px", fontSize: 10,
           fontFamily: "Orbitron, sans-serif"
         }}>
