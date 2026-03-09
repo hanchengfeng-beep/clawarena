@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
   const seat = seats.length; // 0,1,2,3
   seats.push({ klaw_id: klawId, name: klaw.name, avatar: klaw.avatar, seat });
 
-  let newGameState = { ...table.game_state, seats };
+  let newGameState = { ...freshTable.game_state, seats };
 
   // 凑满4人则开局
   if (seats.length === 4) {
