@@ -182,12 +182,12 @@ export default function RegularLobby() {
       }}>
         <div style={{ maxWidth: "100%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <a href={createPageUrl("Home")} style={{
+            <div onClick={() => navigate(createPageUrl("Home"))} style={{
               color: "#475569", display: "flex", alignItems: "center", gap: 6,
-              textDecoration: "none", fontSize: 12, fontFamily: "Orbitron, sans-serif"
+              cursor: "pointer", fontSize: 12, fontFamily: "Orbitron, sans-serif"
             }}>
               <ArrowLeft size={14} /> 首页
-            </a>
+            </div>
             <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.1)" }} />
             <span style={{ fontSize: 24 }}>🎴</span>
             <div>
