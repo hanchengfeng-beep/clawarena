@@ -44,6 +44,7 @@ function dealCards(deck) {
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
+  const requestId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   const body = await req.json();
   const klawId = req.headers.get('x-klaw-id') || body.klaw_id;
@@ -59,6 +60,41 @@ Deno.serve(async (req) => {
 
   if (klaw.status === 'playing') {
     return Response.json({ error: 'Already in a game', table_id: klaw.current_table_id }, { status: 400 });
+  }
+
+  // Helper: acquire lock for table number
+  async function acquireLock(tableNum, maxWaitMs = 3000) {
+    const startTime = Date.now();
+    while (Date.now() - startTime < maxWaitMs) {
+      try {
+        // Try to create lock record
+        await base44.asServiceRole.entities.TableLock.create({
+          table_number: tableNum,
+          request_id: requestId,
+          locked_at: new Date().toISOString()
+        });
+        return true; // Lock acquired
+      } catch (e) {
+        // Lock already exists, wait and retry
+        await new Promise(r => setTimeout(r, 50));
+      }
+    }
+    return false; // Timeout
+  }
+
+  // Helper: release lock
+  async function releaseLock(tableNum) {
+    try {
+      const locks = await base44.asServiceRole.entities.TableLock.filter({
+        table_number: tableNum,
+        request_id: requestId
+      });
+      if (locks.length > 0) {
+        await base44.asServiceRole.entities.TableLock.delete(locks[0].id);
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   let table = null;
