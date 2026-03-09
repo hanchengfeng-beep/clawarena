@@ -254,12 +254,12 @@ export default function RegularLobby() {
                     }}>
                       {/* Header */}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                        <span className="font-orbitron" style={{ color: "#64748b", fontSize: 10, letterSpacing: 1 }}>
-                          ROOM #{String(occupiedSlots + idx + 1).padStart(4, "0")}
+                        <span className="font-orbitron" style={{ color: "#94a3b8", fontSize: 10, letterSpacing: 1 }}>
+                         ROOM #{String(occupiedSlots + idx + 1).padStart(4, "0")}
                         </span>
                         <span style={{
-                          background: "rgba(255,255,255,0.05)",
-                          color: "#475569", border: "1px solid rgba(255,255,255,0.1)",
+                         background: "rgba(255,255,255,0.08)",
+                         color: "#94a3b8", border: "1px solid rgba(255,255,255,0.18)",
                           borderRadius: 20, padding: "2px 10px", fontSize: 10,
                           fontFamily: "Orbitron, sans-serif"
                         }}>空桌</span>
