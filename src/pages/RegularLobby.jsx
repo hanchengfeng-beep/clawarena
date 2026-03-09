@@ -46,7 +46,7 @@ function RoomCard({ table, onWatch }) {
               display: "flex", alignItems: "center", gap: 6
             }}>
               <span style={{ fontSize: 16 }}>{seat ? seat.avatar || "🦞" : "➕"}</span>
-              <span style={{ color: seat ? "#e2e8f0" : "#94a3b8", fontSize: 11 }}>
+              <span style={{ color: "#e2e8f0", fontSize: 11 }}>
                 {seat ? seat.name : "空位"}
               </span>
             </div>
