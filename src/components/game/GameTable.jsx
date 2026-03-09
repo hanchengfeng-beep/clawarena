@@ -288,6 +288,29 @@ export default function GameTable({ tableNumber, round, onGameEnd, realPlayers }
     });
   }, [addLog, onGameEnd, tableNumber]);
 
+  // 计时器：30秒超时自动 pass
+  useEffect(() => {
+    if (!isRunning || gameState?.gameOver) {
+      clearInterval(timerRef.current);
+      setPlayerTimer(30);
+      return;
+    }
+    
+    setPlayerTimer(30);
+    timerRef.current = setInterval(() => {
+      setPlayerTimer(prev => {
+        if (prev <= 1) {
+          // 时间到，强制执行一次 playStep（AI 出牌或 pass）
+          playStep();
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timerRef.current);
+  }, [isRunning, gameState?.gameOver, playStep]);
+
   useEffect(() => {
     if (isRunning && !gameState?.gameOver) {
       intervalRef.current = setInterval(playStep, speed);
