@@ -354,6 +354,16 @@ export default function GameTable({ tableNumber, round, onGameEnd, realPlayers }
           )}
         </div>
         <div className="flex gap-2 items-center">
+          {isRunning && (
+            <div className="px-3 py-1 rounded text-xs font-bold" style={{
+              background: playerTimer <= 10 ? "#ff444422" : "#00f5ff22",
+              color: playerTimer <= 10 ? "#ff4444" : "#00f5ff",
+              border: `1px solid ${playerTimer <= 10 ? "#ff444444" : "#00f5ff44"}`,
+              fontFamily: "Orbitron, sans-serif", minWidth: 40, textAlign: "center"
+            }}>
+              {playerTimer}s
+            </div>
+          )}
           <select value={speed} onChange={e => setSpeed(Number(e.target.value))}
             className="text-xs px-2 py-1 rounded"
             style={{ background: "#1e293b", color: "#94a3b8", border: "1px solid #334155", fontFamily: "Orbitron, sans-serif" }}>
