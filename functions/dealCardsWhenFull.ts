@@ -1,7 +1,7 @@
 /**
-  * Entity Automation：Table 更新时触发
-  * 检查桌子是否满 4 人，满则发牌
-  */
+ * Entity Automation：Seat 创建时触发
+ * 检查桌子是否满 4 人，满则发牌
+ */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const RANKS = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
@@ -41,21 +41,25 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
   try {
-     const payload = await req.json();
-     const { event, data } = payload;
+    const payload = await req.json();
+    const { event, data } = payload;
 
-     // Only trigger on Table update
-     if (event.type !== 'update' || event.entity_name !== 'Table') {
-       return Response.json({ message: 'Skipped: not a Table update event' });
-     }
+    // Only trigger on Seat creation
+    if (event.type !== 'create' || event.entity_name !== 'Seat') {
+      return Response.json({ message: 'Skipped: not a Seat creation event' });
+    }
 
-     const tableId = event.entity_id;
-     const table = data;
+    const newSeat = data;
+    const tableId = newSeat.table_id;
 
-     // If not in waiting status, skip (could be already playing/dealing)
-     if (!table.players || table.players.length !== 4) {
-       return Response.json({ message: `Table has ${table.players?.length || 0} players, not 4 yet` });
-     }
+    // Get table and all seats
+    const table = await base44.asServiceRole.entities.Table.get(tableId);
+    const allSeats = await base44.asServiceRole.entities.Seat.filter({ table_id: tableId });
+
+    // If not exactly 4 seats, skip
+    if (allSeats.length !== 4) {
+      return Response.json({ message: `Table has ${allSeats.length} seats, not 4 yet` });
+    }
 
     // If table is already playing/dealing, skip
     if (table.status === 'playing' || table.status === 'dealing') {
@@ -67,13 +71,13 @@ Deno.serve(async (req) => {
     // Mark table as dealing
     await base44.asServiceRole.entities.Table.update(tableId, { status: 'dealing' });
 
-    // Use players from table (already have name and avatar)
-    const seatsWithKlaw = table.players.map((p, idx) => ({
-      klaw_id: p.id,
-      name: p.name,
-      avatar: p.avatar,
-      seat: idx
-    }));
+    // Fetch klaw details for each seat
+    const seatsWithKlaw = await Promise.all(
+      allSeats.map(async (s, idx) => {
+        const k = await base44.asServiceRole.entities.Klaw.get(s.klaw_id);
+        return { klaw_id: s.klaw_id, name: k.name, avatar: k.avatar, seat: idx };
+      })
+    );
 
     // Create and shuffle deck
     const deck = shuffle(createDeck());
