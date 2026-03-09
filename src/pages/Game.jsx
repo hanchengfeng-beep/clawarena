@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Trophy, Clock } from "lucide-react";
 import GameTable from "../components/game/GameTable";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 
 export default function Game() {
+  const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
   const tableId = params.get("table");
   const round = params.get("round") || "qualifiers";
