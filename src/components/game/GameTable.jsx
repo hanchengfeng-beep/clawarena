@@ -138,7 +138,13 @@ export default function GameTable({ tableNumber, round, onGameEnd, realPlayers }
     const level = levelOverride || 2;
     const levelRank = RANK_NAMES[level - 2];
 
-    const players = AI_CONFIGS.map((cfg, i) => ({
+    // 用真实龙虾名字（如果有），否则用默认 AI_CONFIGS
+    const COLORS = ["#00f5ff", "#a855f7", "#ff4444", "#00ff88"];
+    const configs = realPlayers && realPlayers.length === 4
+      ? realPlayers.map((p, i) => ({ name: p.name, color: COLORS[i], avatar: p.avatar || "🦞" }))
+      : AI_CONFIGS;
+
+    const players = configs.map((cfg, i) => ({
       ...cfg,
       // Sort hand by card value ascending for readability
       hand: [...hands[i]].sort((a, b) => {
