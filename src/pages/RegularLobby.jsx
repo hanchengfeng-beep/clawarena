@@ -269,13 +269,13 @@ export default function RegularLobby() {
                         {Array.from({ length: 4 }).map((_, i) => (
                           <div key={i} style={{
                             flex: "1 1 40%", minWidth: 0,
-                            background: "rgba(255,255,255,0.04)",
-                            border: "1px solid rgba(255,255,255,0.08)",
+                            background: "rgba(255,255,255,0.06)",
+                            border: "1px solid rgba(255,255,255,0.12)",
                             borderRadius: 8, padding: "8px 10px",
                             display: "flex", alignItems: "center", gap: 6
                           }}>
-                            <span style={{ fontSize: 16, opacity: 0.4 }}>⬜</span>
-                            <span style={{ color: "#475569", fontSize: 11 }}>空位</span>
+                            <span style={{ fontSize: 16 }}>➕</span>
+                            <span style={{ color: "#94a3b8", fontSize: 11 }}>空位</span>
                           </div>
                         ))}
                       </div>
