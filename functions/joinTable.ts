@@ -66,54 +66,47 @@ Deno.serve(async (req) => {
 
   // 如果指定了桌号，直接查找或创建该桌
   if (targetTableNumber) {
-    const allTables = await base44.asServiceRole.entities.Table.filter({});
-    const found = allTables.filter(t => t.table_number === targetTableNumber && t.status !== 'finished');
+    let attempts = 0;
+    const maxAttempts = 10;
     
-    if (found.length > 1) {
-      // 并发冲突：多个table有同一个table_number
-      // 删除除第一个外的所有表
-      for (let i = 1; i < found.length; i++) {
-        try {
-          await base44.asServiceRole.entities.Table.delete(found[i].id);
-        } catch (e) {
-          // 可能已被其他请求删除，忽略
-        }
-      }
-      table = found[0];
-    } else if (found.length === 1) {
-      table = found[0];
-    } else {
-      // 没有找到，创建新桌
-      const finished = allTables.filter(t => t.table_number === targetTableNumber && t.status === 'finished');
-      if (finished.length > 0) {
-        try {
-          await base44.asServiceRole.entities.Table.delete(finished[0].id);
-        } catch (e) {
-          // 可能已被其他请求删除，忽略
-        }
-      }
+    while (!table && attempts < maxAttempts) {
+      attempts++;
       
-      table = await base44.asServiceRole.entities.Table.create({
-        table_number: targetTableNumber,
-        status: 'waiting',
-        current_level: 2,
-        game_state: { seats: [], status: 'waiting' }
-      });
+      const allTables = await base44.asServiceRole.entities.Table.filter({});
+      const activeOnNumber = allTables.filter(t => t.table_number === targetTableNumber && t.status === 'waiting');
       
-      // 创建后立即检查是否有并发冲突（其他请求也在创建）
-      const recheck = await base44.asServiceRole.entities.Table.filter({});
-      const recheckFound = recheck.filter(t => t.table_number === targetTableNumber && t.status !== 'finished');
-      if (recheckFound.length > 1) {
-        // 出现了并发冲突，删除新建的这个，用最早的那个
-        for (let i = 1; i < recheckFound.length; i++) {
+      if (activeOnNumber.length > 0) {
+        // 找到一个等待中的桌，使用它
+        table = activeOnNumber[0];
+      } else {
+        // 没有等待中的桌，尝试创建一个
+        // 但首先删除所有finished的旧桌（清理）
+        const finished = allTables.filter(t => t.table_number === targetTableNumber && t.status === 'finished');
+        for (const f of finished) {
           try {
-            await base44.asServiceRole.entities.Table.delete(recheckFound[i].id);
+            await base44.asServiceRole.entities.Table.delete(f.id);
           } catch (e) {
-            // 可能已被其他请求删除，忽略
+            // 忽略
           }
         }
-        table = recheckFound[0];
+        
+        try {
+          table = await base44.asServiceRole.entities.Table.create({
+            table_number: targetTableNumber,
+            status: 'waiting',
+            current_level: 2,
+            game_state: { seats: [], status: 'waiting' }
+          });
+        } catch (e) {
+          // 创建失败，可能是并发冲突，等待后重试
+          await new Promise(r => setTimeout(r, 20 * attempts));
+          table = null;
+        }
       }
+    }
+    
+    if (!table) {
+      return Response.json({ error: 'Failed to find or create table' }, { status: 503 });
     }
   } else {
     // 自动找一个等待中且有空位的桌子
