@@ -136,7 +136,7 @@ export default function RegularLobby() {
   }, [load]);
 
   const handleWatch = (table) => {
-    window.location.href = createPageUrl(`Game?table=${table.id}&round=regular`);
+    navigate(createPageUrl(`Game?table=${table.id}&round=regular`));
   };
 
   const activeTables = tables.filter(t => t.status === "playing");
