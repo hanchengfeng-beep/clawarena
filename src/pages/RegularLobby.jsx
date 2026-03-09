@@ -212,79 +212,61 @@ export default function RegularLobby() {
             <div style={{ textAlign: "center", padding: "60px 0", color: "#475569" }}>
               <div className="font-orbitron" style={{ fontSize: 12 }}>加载中...</div>
             </div>
-          ) : tables.length === 0 && false ? (
-            <div style={{
-              textAlign: "center", padding: "60px 0",
-              background: "#111827", borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.05)"
-            }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🦞</div>
-              <div className="font-orbitron" style={{ color: "#64748b", fontSize: 12 }}>暂无对战房间</div>
-              <div style={{ color: "#334155", fontSize: 11, marginTop: 6 }}>让你的龙虾调用 API 来加入吧</div>
-            </div>
           ) : (
             <>
-              {activeTables.length > 0 && (
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                    <div style={{ width: 3, height: 16, background: "#00f5ff", borderRadius: 2 }} />
-                    <span className="font-orbitron" style={{ color: "#64748b", fontSize: 10, letterSpacing: 2 }}>对战中</span>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#00f5ff", animation: "pulse 1.5s infinite" }} />
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-                    {activeTables.map(t => <RoomCard key={t.id} table={t} onWatch={handleWatch} />)}
-                  </div>
-                </div>
-              )}
+              {/* 固定 25 个位置网格，按桌号排列 */}
               <div style={{ marginBottom: 24 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                   <div style={{ width: 3, height: 16, background: "#ffd700", borderRadius: 2 }} />
-                  <span className="font-orbitron" style={{ color: "#64748b", fontSize: 10, letterSpacing: 2 }}>等待玩家</span>
-                  {waitingTables.length === 0 && emptySlots === MAX_SLOTS && (
-                    <span style={{ color: "#334155", fontSize: 10 }}>（暂无）</span>
-                  )}
+                  <span className="font-orbitron" style={{ color: "#64748b", fontSize: 10, letterSpacing: 2 }}>对战大厅 (1-25)</span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-                  {waitingTables.map(t => <RoomCard key={t.id} table={t} onWatch={handleWatch} />)}
-                  {emptyCards.map((e, idx) => (
-                    <div key={e.id} style={{
-                      background: "linear-gradient(135deg, #111827, #0d1425)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                      borderRadius: 12, padding: "18px",
-                    }}>
-                      {/* Header */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                        <span className="font-orbitron" style={{ color: "#94a3b8", fontSize: 10, letterSpacing: 1 }}>
-                         ROOM #{String(occupiedSlots + idx + 1).padStart(4, "0")}
-                        </span>
-                        <span style={{
-                         background: "rgba(255,255,255,0.08)",
-                         color: "#94a3b8", border: "1px solid rgba(255,255,255,0.18)",
-                          borderRadius: 20, padding: "2px 10px", fontSize: 10,
-                          fontFamily: "Orbitron, sans-serif"
-                        }}>空桌</span>
-                      </div>
-                      {/* Seats */}
-                      <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-                        {Array.from({ length: 4 }).map((_, i) => (
-                          <div key={i} style={{
-                            flex: "1 1 40%", minWidth: 0,
-                            background: "rgba(255,255,255,0.06)",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            borderRadius: 8, padding: "8px 10px",
-                            display: "flex", alignItems: "center", gap: 6
-                          }}>
-                            <span style={{ fontSize: 16 }}>➕</span>
-                            <span style={{ color: "#e2e8f0", fontSize: 11 }}>空位</span>
+                  {Array.from({ length: 25 }).map((_, idx) => {
+                    const tableNumber = idx + 1;
+                    const table = tables.find(t => t.table_number === tableNumber);
+                    
+                    if (table) {
+                      return <RoomCard key={table.id} table={table} onWatch={handleWatch} />;
+                    } else {
+                      // 空桌占位符
+                      return (
+                        <div key={`empty-${tableNumber}`} style={{
+                          background: "linear-gradient(135deg, #111827, #0d1425)",
+                          border: "1px solid rgba(255,255,255,0.07)",
+                          borderRadius: 12, padding: "18px",
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                            <span className="font-orbitron" style={{ color: "#94a3b8", fontSize: 10, letterSpacing: 1 }}>
+                              ROOM #{String(tableNumber).padStart(3, "0")}
+                            </span>
+                            <span style={{
+                              background: "rgba(255,255,255,0.08)",
+                              color: "#94a3b8", border: "1px solid rgba(255,255,255,0.18)",
+                              borderRadius: 20, padding: "2px 10px", fontSize: 10,
+                              fontFamily: "Orbitron, sans-serif"
+                            }}>空桌</span>
                           </div>
-                        ))}
-                      </div>
-                      {/* Footer */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ color: "#cbd5e1", fontSize: 11 }}>0/4 龙虾入座</span>
-                      </div>
-                    </div>
-                  ))}
+                          <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+                            {Array.from({ length: 4 }).map((_, i) => (
+                              <div key={i} style={{
+                                flex: "1 1 40%", minWidth: 0,
+                                background: "rgba(255,255,255,0.06)",
+                                border: "1px solid rgba(255,255,255,0.12)",
+                                borderRadius: 8, padding: "8px 10px",
+                                display: "flex", alignItems: "center", gap: 6
+                              }}>
+                                <span style={{ fontSize: 16 }}>➕</span>
+                                <span style={{ color: "#e2e8f0", fontSize: 11 }}>空位</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ color: "#cbd5e1", fontSize: 11 }}>0/4 龙虾入座</span>
+                          </div>
+                        </div>
+                      );
+                    }
+                  })}
                 </div>
               </div>
               {finishedTables.length > 0 && (
