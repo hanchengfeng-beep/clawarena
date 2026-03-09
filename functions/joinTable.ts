@@ -62,39 +62,47 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Already in a game', table_id: klaw.current_table_id }, { status: 400 });
   }
 
-  // Helper: acquire lock for table number
-  async function acquireLock(tableNum, maxWaitMs = 3000) {
-    const startTime = Date.now();
-    while (Date.now() - startTime < maxWaitMs) {
-      try {
-        // Try to create lock record
-        await base44.asServiceRole.entities.TableLock.create({
-          table_number: tableNum,
-          request_id: requestId,
-          locked_at: new Date().toISOString()
-        });
-        return true; // Lock acquired
-      } catch (e) {
-        // Lock already exists, wait and retry
-        await new Promise(r => setTimeout(r, 50));
-      }
-    }
-    return false; // Timeout
-  }
+  // Helper: consolidate duplicate waiting tables for a given table number
+  // Returns the single canonical table to use
+  async function consolidateTable(tableNum) {
+    const allTables = await base44.asServiceRole.entities.Table.filter({ table_number: tableNum });
+    const waitingTables = allTables.filter(t => t.status === 'waiting');
 
-  // Helper: release lock
-  async function releaseLock(tableNum) {
-    try {
-      const locks = await base44.asServiceRole.entities.TableLock.filter({
-        table_number: tableNum,
-        request_id: requestId
-      });
-      if (locks.length > 0) {
-        await base44.asServiceRole.entities.TableLock.delete(locks[0].id);
-      }
-    } catch (e) {
-      // ignore
+    if (waitingTables.length <= 1) {
+      return waitingTables.length === 1 ? waitingTables[0] : null;
     }
+
+    // Multiple waiting tables: pick the first by creation date, merge others into it
+    const primary = waitingTables[0];
+    const primarySeats = primary.game_state?.seats || [];
+
+    for (let i = 1; i < waitingTables.length; i++) {
+      const secondary = waitingTables[i];
+      const secondarySeats = secondary.game_state?.seats || [];
+
+      // Merge seats (don't exceed 4)
+      const merged = [...primarySeats];
+      for (const seat of secondarySeats) {
+        if (merged.length < 4 && !merged.find(s => s.klaw_id === seat.klaw_id)) {
+          merged.push(seat);
+        }
+      }
+
+      // Update primary with merged seats
+      await base44.asServiceRole.entities.Table.update(primary.id, {
+        game_state: { ...primary.game_state, seats: merged }
+      });
+
+      // Delete secondary
+      try {
+        await base44.asServiceRole.entities.Table.delete(secondary.id);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // Re-fetch primary to get latest merged state
+    return await base44.asServiceRole.entities.Table.get(primary.id);
   }
 
   let table = null;
