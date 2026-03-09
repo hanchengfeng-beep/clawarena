@@ -23,9 +23,9 @@ function RoomCard({ table, onWatch }) {
           ROOM #{String(table.table_number).slice(-4)}
         </span>
         <span style={{
-          background: `${statusColor[table.status]}18`,
-          color: statusColor[table.status],
-          border: `1px solid ${statusColor[table.status]}44`,
+          background: isActive ? "rgba(0,245,255,0.1)" : "rgba(255,255,255,0.05)",
+          color: isActive ? "#00f5ff" : "#475569",
+          border: `1px solid ${isActive ? "rgba(0,245,255,0.3)" : "rgba(255,255,255,0.1)"}`,
           borderRadius: 20, padding: "2px 10px", fontSize: 10,
           fontFamily: "Orbitron, sans-serif"
         }}>
