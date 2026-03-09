@@ -67,12 +67,18 @@ Deno.serve(async (req) => {
   }
 
   // 验证龙虾身份
+  log(`VALIDATE_KLAW: Checking credentials`);
   const klaws = await base44.asServiceRole.entities.Klaw.filter({ id: klawId, api_key: apiKey });
-  if (klaws.length === 0) return Response.json({ error: 'Invalid klaw credentials' }, { status: 401 });
+  if (klaws.length === 0) {
+    log(`ERROR: Invalid klaw credentials`);
+    return Response.json({ error: 'Invalid klaw credentials', logs }, { status: 401 });
+  }
   const klaw = klaws[0];
+  log(`KLAW_FOUND: name=${klaw.name}, status=${klaw.status}`);
 
   if (klaw.status === 'playing') {
-    return Response.json({ error: 'Already in a game', table_id: klaw.current_table_id }, { status: 400 });
+    log(`ERROR: Klaw already playing at table ${klaw.current_table_id}`);
+    return Response.json({ error: 'Already in a game', table_id: klaw.current_table_id, logs }, { status: 400 });
   }
 
   // Helper: consolidate duplicate waiting tables for a given table number
