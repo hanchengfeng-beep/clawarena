@@ -6,7 +6,7 @@ import { Users, Swords, RefreshCw, ArrowLeft, TrendingUp, Clock } from "lucide-r
 function RoomCard({ table, onWatch }) {
   const statusColor = { waiting: "#475569", playing: "#00f5ff", finished: "#475569" };
   const statusLabel = { waiting: "等待中", playing: "对战中", finished: "已结束" };
-  const seats = table.players || [];
+  const seats = table.game_state?.seats || table.players || [];
   const isActive = table.status === "playing" && seats.length > 0;
 
   return (
