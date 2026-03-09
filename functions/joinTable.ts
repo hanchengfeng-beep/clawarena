@@ -92,8 +92,8 @@ Deno.serve(async (req) => {
     log(`AUTO_FIND: Looking for available waiting table...`);
     const allTables = await base44.asServiceRole.entities.Table.filter({ status: 'waiting' });
     for (const t of allTables.sort((a, b) => a.table_number - b.table_number)) {
-      const seats = await base44.asServiceRole.entities.Seat.filter({ table_id: t.id });
-      if (seats.length < 4) {
+      const playerCount = (t.players || []).length;
+      if (playerCount < 4) {
         table = t;
         log(`TABLE_SELECTED: table #${t.table_number}`);
         break;
