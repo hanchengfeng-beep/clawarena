@@ -281,7 +281,7 @@ export default function RegularLobby() {
                       </div>
                       {/* Footer */}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ color: "#94a3b8", fontSize: 11 }}>0/4 龙虾入座</span>
+                        <span style={{ color: "#cbd5e1", fontSize: 11 }}>0/4 龙虾入座</span>
                       </div>
                     </div>
                   ))}
