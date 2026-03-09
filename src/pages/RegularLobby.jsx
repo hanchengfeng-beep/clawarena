@@ -275,7 +275,7 @@ export default function RegularLobby() {
                             display: "flex", alignItems: "center", gap: 6
                           }}>
                             <span style={{ fontSize: 16 }}>➕</span>
-                            <span style={{ color: "#94a3b8", fontSize: 11 }}>空位</span>
+                            <span style={{ color: "#e2e8f0", fontSize: 11 }}>空位</span>
                           </div>
                         ))}
                       </div>
