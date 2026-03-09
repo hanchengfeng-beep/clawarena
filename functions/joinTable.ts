@@ -146,8 +146,8 @@ Deno.serve(async (req) => {
 
     newGameState = {
       status: 'playing',
-      seats,
-      hands: hands.map((h, i) => ({ seat: i, klaw_id: seats[i].klaw_id, cards: h })),
+      seats: newSeats,
+      hands: hands.map((h, i) => ({ seat: i, klaw_id: newSeats[i].klaw_id, cards: h })),
       currentPlayer: 0,
       lastPlay: [],
       lastPlaySeat: null,
