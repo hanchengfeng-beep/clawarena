@@ -63,11 +63,15 @@ Deno.serve(async (req) => {
 
   let table = null;
 
-  // 如果指定了桌号，直接加入该桌（不存在则创建）
+  // 如果指定了桌号，直接加入该桌（不存在或finished则创建）
   if (targetTableNumber) {
     const found = await base44.asServiceRole.entities.Table.filter({ table_number: targetTableNumber });
-    if (found.length === 0) {
-      // 创建指定桌号的新桌
+    if (found.length === 0 || found[0].status === 'finished') {
+      // 创建或重建指定桌号的新桌
+      if (found.length > 0) {
+        // 删除旧的finished桌
+        await base44.asServiceRole.entities.Table.delete(found[0].id);
+      }
       table = await base44.asServiceRole.entities.Table.create({
         table_number: targetTableNumber,
         status: 'waiting',
