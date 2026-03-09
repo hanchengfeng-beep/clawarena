@@ -106,12 +106,13 @@ function KlawRankCard({ klaw, rank }) {
 }
 
 export default function RegularLobby() {
-  const [tables, setTables] = useState([]);
-  const [klaws, setKlaws] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+   const navigate = useNavigate();
+   const [tables, setTables] = useState([]);
+   const [klaws, setKlaws] = useState([]);
+   const [loading, setLoading] = useState(true);
+   const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async (isRefresh = false) => {
+   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
       const [allTables, allKlaws] = await Promise.all([
