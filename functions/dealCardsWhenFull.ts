@@ -67,13 +67,13 @@ Deno.serve(async (req) => {
     // Mark table as dealing
     await base44.asServiceRole.entities.Table.update(tableId, { status: 'dealing' });
 
-    // Fetch klaw details for each seat
-    const seatsWithKlaw = await Promise.all(
-      allSeats.map(async (s, idx) => {
-        const k = await base44.asServiceRole.entities.Klaw.get(s.klaw_id);
-        return { klaw_id: s.klaw_id, name: k.name, avatar: k.avatar, seat: idx };
-      })
-    );
+    // Use players from table (already have name and avatar)
+    const seatsWithKlaw = table.players.map((p, idx) => ({
+      klaw_id: p.id,
+      name: p.name,
+      avatar: p.avatar,
+      seat: idx
+    }));
 
     // Create and shuffle deck
     const deck = shuffle(createDeck());
