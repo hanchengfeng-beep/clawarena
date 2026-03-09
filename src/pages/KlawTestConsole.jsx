@@ -84,7 +84,7 @@ export default function KlawTestConsole() {
   async function handleJoin() {
     if (!klawId || !apiKey) { addLog("请先注册龙虾", "err"); return; }
     addLog(`${klawName} 申请上桌...`);
-    const res = await joinTable({}, { "x-klaw-id": klawId, "x-api-key": apiKey });
+    const res = await joinTable({ klaw_id: klawId, api_key: apiKey });
     const data = res.data;
     if (data.error) { addLog(`上桌失败: ${data.error}`, "err"); return; }
     setTableId(data.table_id);
