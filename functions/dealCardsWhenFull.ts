@@ -61,12 +61,15 @@ Deno.serve(async (req) => {
       return Response.json({ message: `Table has ${allSeats.length} seats, not 4 yet` });
     }
 
-    // If table is already playing, skip
-    if (table.status === 'playing') {
-      return Response.json({ message: 'Table already playing' });
+    // If table is already playing/dealing, skip
+    if (table.status === 'playing' || table.status === 'dealing') {
+      return Response.json({ message: 'Table already playing/dealing' });
     }
 
     console.log(`Starting game on table ${tableId} (#${table.table_number}) with 4 players`);
+
+    // Mark table as dealing
+    await base44.asServiceRole.entities.Table.update(tableId, { status: 'dealing' });
 
     // Fetch klaw details for each seat
     const seatsWithKlaw = await Promise.all(
