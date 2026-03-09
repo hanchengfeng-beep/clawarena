@@ -67,7 +67,8 @@ Deno.serve(async (req) => {
   // 如果指定了桌号，直接查找或创建该桌
   if (targetTableNumber) {
     let attempts = 0;
-    while (!table && attempts < 3) {
+    const maxAttempts = 5;
+    while (!table && attempts < maxAttempts) {
       attempts++;
       const allTables = await base44.asServiceRole.entities.Table.filter({});
       const found = allTables.filter(t => t.table_number === targetTableNumber && t.status !== 'finished');
@@ -88,8 +89,11 @@ Deno.serve(async (req) => {
             game_state: { seats: [], status: 'waiting' }
           });
         } catch (e) {
-          // 创建失败可能是并发冲突，重新查询
-          if (attempts < 3) continue;
+          // 创建失败可能是并发冲突，短暂延迟后重新查询
+          if (attempts < maxAttempts) {
+            await new Promise(r => setTimeout(r, 50 * attempts));
+            continue;
+          }
           throw e;
         }
       }
