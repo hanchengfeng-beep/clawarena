@@ -36,7 +36,7 @@ export default function Game() {
   const handleGameEnd = (result) => setGameResult(result);
 
   const players = tableData?.game_state?.seats || tableData?.players || [];
-  const isReady = !isRegular || (tableData && tableData.status === 'playing');
+  const isReady = !isRegular || (tableData && tableData.status === 'playing' && tableData.game_state?.hands);
 
   return (
     <div className="min-h-screen bg-grid" style={{ background: "#0a0e1a" }}>
