@@ -98,9 +98,15 @@ Deno.serve(async (req) => {
   }
 
   let table = null;
+  let lockTableNumber = null;
 
   // 如果指定了桌号，直接查找或创建该桌
   if (targetTableNumber) {
+    lockTableNumber = targetTableNumber;
+    if (!await acquireLock(lockTableNumber)) {
+      return Response.json({ error: 'Failed to acquire table lock' }, { status: 503 });
+    }
+
     // 查找该桌号的所有表
     const allTables = await base44.asServiceRole.entities.Table.filter({ table_number: targetTableNumber });
     const waitingTables = allTables.filter(t => t.status === 'waiting');
@@ -151,6 +157,11 @@ Deno.serve(async (req) => {
       }
       if (nextNumber === null) {
         return Response.json({ error: 'Regular lobby is full (max 25 tables). Try again later.' }, { status: 503 });
+      }
+      
+      lockTableNumber = nextNumber;
+      if (!await acquireLock(lockTableNumber)) {
+        return Response.json({ error: 'Failed to acquire table lock' }, { status: 503 });
       }
       
       table = await base44.asServiceRole.entities.Table.create({
