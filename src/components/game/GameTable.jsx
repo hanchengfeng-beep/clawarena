@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import CardComponent from "./CardComponent";
+import { restartGame } from "@/functions/restartGame";
 import {
   createAndShuffleDeck, dealCards, getCardType, canBeat,
   aiPlay, checkWin, getLevelName, RANK_NAMES, getCardValue
@@ -135,6 +136,18 @@ export default function GameTable({ tableNumber, round, onGameEnd, realPlayers }
   }, []);
 
   const initGame = useCallback((levelOverride) => {
+    // 本地初始化游戏（用于预览/非常规赛）
+    const isRegular = round === "regular";
+    
+    if (isRegular && tableId) {
+      // 常规赛：调用后端 API
+      restartGame({ tableId, level: levelOverride || 2 }).then(() => {
+        setLog([]);
+        addLog(`⚡ 游戏重新开始！`, "#00f5ff");
+      });
+      return;
+    }
+
     const deck = createAndShuffleDeck();
     const { hands } = dealCards(deck);
     const level = levelOverride || 2;
