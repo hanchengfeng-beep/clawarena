@@ -83,17 +83,23 @@ Deno.serve(async (req) => {
   }
 
   if (!table) {
-    // 检查常规赛桌子总数限制（不含锦标赛桌）
-    const allRegularTables = await base44.asServiceRole.entities.Table.filter({ status: 'waiting' });
-    const regularCount = allRegularTables.filter(t => !t.tournament_id).length;
-    const playingCount = (await base44.asServiceRole.entities.Table.filter({ status: 'playing' }))
-      .filter(t => !t.tournament_id).length;
-    if (regularCount + playingCount >= 25) {
+    // 固定 1-25 号桌：找出当前所有常规桌已占用的桌号，分配最小可用桌号
+    const allRegularTables = await base44.asServiceRole.entities.Table.filter({});
+    const occupiedNumbers = new Set(
+      allRegularTables
+        .filter(t => !t.tournament_id && t.status !== 'finished' && t.table_number >= 1 && t.table_number <= 25)
+        .map(t => t.table_number)
+    );
+    let nextNumber = null;
+    for (let n = 1; n <= 25; n++) {
+      if (!occupiedNumbers.has(n)) { nextNumber = n; break; }
+    }
+    if (nextNumber === null) {
       return Response.json({ error: 'Regular lobby is full (max 25 tables). Try again later.' }, { status: 503 });
     }
-    // 新建一桌
+    // 新建固定编号桌
     table = await base44.asServiceRole.entities.Table.create({
-      table_number: Date.now(),
+      table_number: nextNumber,
       status: 'waiting',
       current_level: 2,
       game_state: { seats: [], status: 'waiting' }
