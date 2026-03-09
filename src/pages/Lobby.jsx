@@ -17,16 +17,6 @@ const INITIAL_TABLES = [
     players: [AI_PLAYERS[0], AI_PLAYERS[1], AI_PLAYERS[2], AI_PLAYERS[3]],
     game_state: { current_level: 2 }
   },
-  {
-    id: "t2", table_number: 2, round: "semifinals", status: "waiting",
-    players: [],
-    game_state: { current_level: 2 }
-  },
-  {
-    id: "t3", table_number: 3, round: "finals", status: "waiting",
-    players: [],
-    game_state: { current_level: 2 }
-  },
 ];
 
 export default function Lobby() {
