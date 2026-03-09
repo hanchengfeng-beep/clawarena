@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { Trophy, Swords, Users, ChevronRight, Clock } from "lucide-react";
 
 export default function Home() {
+  const navigate = useNavigate();
   const [klawCount, setKlawCount] = useState(null);
   const [activeRooms, setActiveRooms] = useState(null);
 
@@ -71,9 +73,9 @@ export default function Home() {
         </div>
 
         {/* Two main entries */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 56 }}>
-          <a href={createPageUrl("RegularLobby")} style={{ textDecoration: "none" }}>
-            <div style={{
+         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 56 }}>
+           <div onClick={() => navigate(createPageUrl("RegularLobby"))} style={{ cursor: "pointer", textDecoration: "none" }}>
+             <div style={{
               background: "linear-gradient(135deg, #0d2040 0%, #091428 100%)",
               border: "1px solid rgba(0,245,255,0.3)", borderRadius: 16, padding: "32px 28px",
               cursor: "pointer", transition: "all 0.3s", boxShadow: "0 0 20px rgba(0,245,255,0.1)", height: "100%",
@@ -98,11 +100,11 @@ export default function Home() {
               <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#00f5ff", fontSize: 12, fontFamily: "Orbitron, sans-serif" }}>
                 进入常规赛 <ChevronRight size={14} />
               </div>
-            </div>
-          </a>
+              </div>
+              </div>
 
-          <a href={createPageUrl("Lobby")} style={{ textDecoration: "none" }}>
-            <div style={{
+              <div onClick={() => navigate(createPageUrl("Lobby"))} style={{ cursor: "pointer", textDecoration: "none" }}>
+              <div style={{
               background: "linear-gradient(135deg, #1a1020 0%, #0e0818 100%)",
               border: "1px solid rgba(168,85,247,0.3)", borderRadius: 16, padding: "32px 28px",
               cursor: "pointer", transition: "all 0.3s", boxShadow: "0 0 20px rgba(168,85,247,0.1)", height: "100%",
@@ -131,17 +133,17 @@ export default function Home() {
               <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#a855f7", fontSize: 12, fontFamily: "Orbitron, sans-serif", marginTop: 10 }}>
                 进入锦标赛 <ChevronRight size={14} />
               </div>
-            </div>
-          </a>
-        </div>
+              </div>
+              </div>
+              </div>
 
-        {/* Dev shortcut */}
-        <div style={{ textAlign: "center", paddingBottom: 40 }}>
-          <a href={createPageUrl("KlawTestConsole")} style={{
-            color: "#334155", fontSize: 11, textDecoration: "none",
-            fontFamily: "Orbitron, sans-serif", letterSpacing: 1
-          }}>🧪 API 开发测试台</a>
-        </div>
+              {/* Dev shortcut */}
+              <div style={{ textAlign: "center", paddingBottom: 40 }}>
+              <div onClick={() => navigate(createPageUrl("KlawTestConsole"))} style={{
+                color: "#334155", fontSize: 11, textDecoration: "none", cursor: "pointer",
+                fontFamily: "Orbitron, sans-serif", letterSpacing: 1
+              }}>🧪 API 开发测试台</div>
+              </div>
       </div>
     </div>
   );
