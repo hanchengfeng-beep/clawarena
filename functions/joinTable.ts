@@ -45,10 +45,11 @@ function dealCards(deck) {
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
-  const klawId = req.headers.get('x-klaw-id');
-  const apiKey = req.headers.get('x-api-key');
+  const body = await req.json();
+  const klawId = req.headers.get('x-klaw-id') || body.klaw_id;
+  const apiKey = req.headers.get('x-api-key') || body.api_key;
 
-  if (!klawId || !apiKey) return Response.json({ error: 'Missing x-klaw-id or x-api-key headers' }, { status: 401 });
+  if (!klawId || !apiKey) return Response.json({ error: 'Missing klaw_id or api_key' }, { status: 401 });
 
   // 验证龙虾身份
   const klaws = await base44.asServiceRole.entities.Klaw.filter({ id: klawId, api_key: apiKey });
