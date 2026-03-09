@@ -4,10 +4,10 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { Users, Swords, RefreshCw, ArrowLeft, TrendingUp, Clock } from "lucide-react";
 
-function RoomCard({ table, onWatch }) {
+function RoomCard({ table, onWatch, seatsData = {} }) {
   const statusColor = { waiting: "#475569", playing: "#00f5ff", finished: "#475569" };
   const statusLabel = { waiting: "等待中", playing: "对战中", finished: "已结束" };
-  const seats = table.game_state?.seats || table.players || [];
+  const seats = seatsData[table.id] || table.game_state?.seats || table.players || [];
   const isActive = table.status === "playing" && seats.length > 0;
 
   return (
