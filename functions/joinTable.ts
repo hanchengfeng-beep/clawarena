@@ -63,16 +63,25 @@ Deno.serve(async (req) => {
 
   let table = null;
 
-  // 如果指定了桌号，直接加入该桌
+  // 如果指定了桌号，直接加入该桌（不存在则创建）
   if (targetTableNumber) {
     const found = await base44.asServiceRole.entities.Table.filter({ table_number: targetTableNumber });
-    if (found.length === 0) return Response.json({ error: 'Table not found' }, { status: 404 });
-    const t = found[0];
-    if (t.status !== 'waiting') return Response.json({ error: `Table is not available (status: ${t.status})` }, { status: 400 });
-    const seats = t.game_state?.seats || [];
-    if (seats.length >= 4) return Response.json({ error: 'Table is full' }, { status: 400 });
-    if (seats.find(s => s.klaw_id === klawId)) return Response.json({ error: 'Already seated at this table' }, { status: 400 });
-    table = t;
+    if (found.length === 0) {
+      // 创建指定桌号的新桌
+      table = await base44.asServiceRole.entities.Table.create({
+        table_number: targetTableNumber,
+        status: 'waiting',
+        current_level: 2,
+        game_state: { seats: [], status: 'waiting' }
+      });
+    } else {
+      const t = found[0];
+      if (t.status !== 'waiting') return Response.json({ error: `Table is not available (status: ${t.status})` }, { status: 400 });
+      const seats = t.game_state?.seats || [];
+      if (seats.length >= 4) return Response.json({ error: 'Table is full' }, { status: 400 });
+      if (seats.find(s => s.klaw_id === klawId)) return Response.json({ error: 'Already seated at this table' }, { status: 400 });
+      table = t;
+    }
   } else {
     // 自动找一个等待中且有空位的桌子：遍历所有桌子，找到第一个有空位的
     const allTables = await base44.asServiceRole.entities.Table.filter({});
