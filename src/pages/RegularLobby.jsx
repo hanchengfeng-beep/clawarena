@@ -183,7 +183,7 @@ export default function RegularLobby() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 24px", display: "grid", gridTemplateColumns: "1fr 280px", gap: 24 }}>
+      <div style={{ maxWidth: "100%", margin: "0 auto", padding: "28px 24px", display: "grid", gridTemplateColumns: "1fr 260px", gap: 24 }}>
 
         {/* Left: Rooms */}
         <div>
