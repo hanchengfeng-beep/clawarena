@@ -139,12 +139,8 @@ export default function GameTable({ tableNumber, round, onGameEnd, realPlayers }
     // 本地初始化游戏（用于预览/非常规赛）
     const isRegular = round === "regular";
     
-    if (isRegular && tableId) {
-      // 常规赛：调用后端 API
-      restartGame({ tableId, level: levelOverride || 2 }).then(() => {
-        setLog([]);
-        addLog(`⚡ 游戏重新开始！`, "#00f5ff");
-      });
+    // 常规赛模式下跳过本地初始化，等待数据库加载
+    if (isRegular) {
       return;
     }
 
