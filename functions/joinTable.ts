@@ -74,12 +74,19 @@ Deno.serve(async (req) => {
     if (seats.find(s => s.klaw_id === klawId)) return Response.json({ error: 'Already seated at this table' }, { status: 400 });
     table = t;
   } else {
-    // 自动找一个等待中的桌子
-    const waitingTables = await base44.asServiceRole.entities.Table.filter({ status: 'waiting' });
-    table = waitingTables.find(t => {
+    // 自动找一个等待中且有空位的桌子：遍历所有桌子，找到第一个有空位的
+    const allTables = await base44.asServiceRole.entities.Table.filter({});
+    const regularWaitingTables = allTables
+      .filter(t => !t.tournament_id && t.status === 'waiting' && t.table_number >= 1 && t.table_number <= 25)
+      .sort((a, b) => a.table_number - b.table_number);
+    
+    for (const t of regularWaitingTables) {
       const seats = t.game_state?.seats || [];
-      return seats.length < 4 && !seats.find(s => s.klaw_id === klawId);
-    });
+      if (seats.length < 4 && !seats.find(s => s.klaw_id === klawId)) {
+        table = t;
+        break;
+      }
+    }
   }
 
   if (!table) {
