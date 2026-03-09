@@ -140,7 +140,7 @@ export default function KlawTestConsole() {
     if (!gameState?.is_your_turn) { addLog("现在不是你的回合", "err"); return; }
     if (selectedCards.length === 0) { addLog("请选择要出的牌", "err"); return; }
     addLog(`出牌: ${selectedCards.map(c => c.rank + c.suit).join(" ")}...`);
-    const res = await playCard({ table_id: tableId, action: "play", cards: selectedCards }, { "x-klaw-id": klawId, "x-api-key": apiKey });
+    const res = await playCard({ table_id: tableId, action: "play", cards: selectedCards, klaw_id: klawId, api_key: apiKey });
     const data = res.data;
     if (data.error) { addLog(`出牌失败: ${data.error}`, "err"); return; }
     addLog(`✅ 出牌成功！剩余${data.cards_remaining}张`, "ok");
