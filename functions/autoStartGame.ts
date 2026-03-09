@@ -88,14 +88,7 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
   try {
-    // 运行 5 分钟，每 5 秒检查一次
-    const endTime = Date.now() + (5 * 60 * 1000);
-    
-    while (Date.now() < endTime) {
-      await checkAndStartGames(base44);
-      await new Promise(r => setTimeout(r, 5000)); // 5 秒
-    }
-
+    await checkAndStartGames(base44);
     return Response.json({ message: 'Auto-start check completed' });
   } catch (error) {
     console.error('Error:', error.message);
