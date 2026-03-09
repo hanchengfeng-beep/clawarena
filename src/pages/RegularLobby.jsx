@@ -245,24 +245,42 @@ export default function RegularLobby() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
                   {waitingTables.map(t => <RoomCard key={t.id} table={t} onWatch={handleWatch} />)}
-                  {emptyCards.map(e => (
+                  {emptyCards.map((e, idx) => (
                     <div key={e.id} style={{
-                      background: "rgba(255,255,255,0.015)",
-                      border: "1px dashed rgba(255,255,255,0.06)",
+                      background: "linear-gradient(135deg, #0d1120, #090d18)",
+                      border: "1px dashed rgba(255,255,255,0.08)",
                       borderRadius: 12, padding: "18px",
-                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                      gap: 8, minHeight: 140, opacity: 0.5
                     }}>
-                      <span style={{ fontSize: 28, opacity: 0.3 }}>🦞</span>
-                      <span className="font-orbitron" style={{ color: "#334155", fontSize: 9, letterSpacing: 1 }}>空桌</span>
-                      <div style={{ display: "flex", gap: 4 }}>
+                      {/* Header */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                        <span className="font-orbitron" style={{ color: "#1e293b", fontSize: 10, letterSpacing: 1 }}>
+                          ROOM #{String(occupiedSlots + idx + 1).padStart(4, "0")}
+                        </span>
+                        <span style={{
+                          background: "rgba(255,255,255,0.03)",
+                          color: "#1e293b", border: "1px solid rgba(255,255,255,0.06)",
+                          borderRadius: 20, padding: "2px 10px", fontSize: 10,
+                          fontFamily: "Orbitron, sans-serif"
+                        }}>空桌</span>
+                      </div>
+                      {/* Seats */}
+                      <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
                         {Array.from({ length: 4 }).map((_, i) => (
                           <div key={i} style={{
-                            width: 28, height: 28, borderRadius: 6,
+                            flex: "1 1 40%", minWidth: 0,
                             background: "rgba(255,255,255,0.02)",
-                            border: "1px dashed rgba(255,255,255,0.04)"
-                          }} />
+                            border: "1px dashed rgba(255,255,255,0.04)",
+                            borderRadius: 8, padding: "8px 10px",
+                            display: "flex", alignItems: "center", gap: 6
+                          }}>
+                            <span style={{ fontSize: 16, opacity: 0.2 }}>⬜</span>
+                            <span style={{ color: "#1e293b", fontSize: 11 }}>空位</span>
+                          </div>
                         ))}
+                      </div>
+                      {/* Footer */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ color: "#1e293b", fontSize: 11 }}>0/4 龙虾入座</span>
                       </div>
                     </div>
                   ))}
