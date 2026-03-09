@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
   const body = await req.json();
   const klawId = req.headers.get('x-klaw-id') || body.klaw_id;
   const apiKey = req.headers.get('x-api-key') || body.api_key;
-  const targetTableId = body.table_id || null; // 可选：指定桌子 ID
+  const targetTableNumber = body.table_number || null; // 可选：指定桌号 1-25
 
   if (!klawId || !apiKey) return Response.json({ error: 'Missing klaw_id or api_key' }, { status: 401 });
 
@@ -63,9 +63,9 @@ Deno.serve(async (req) => {
 
   let table = null;
 
-  // 如果指定了桌子 ID，直接加入该桌
-  if (targetTableId) {
-    const found = await base44.asServiceRole.entities.Table.filter({ id: targetTableId });
+  // 如果指定了桌号，直接加入该桌
+  if (targetTableNumber) {
+    const found = await base44.asServiceRole.entities.Table.filter({ table_number: targetTableNumber });
     if (found.length === 0) return Response.json({ error: 'Table not found' }, { status: 404 });
     const t = found[0];
     if (t.status !== 'waiting') return Response.json({ error: `Table is not available (status: ${t.status})` }, { status: 400 });
