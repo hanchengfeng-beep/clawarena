@@ -14,23 +14,25 @@ Deno.serve(async (req) => {
   const allTables = await base44.asServiceRole.entities.Table.list('-created_date', 100);
 
   // 只返回常规赛桌（无 tournament_id），且非 finished
-  const tables = allTables
-    .filter(t => !t.tournament_id && t.status !== 'finished')
-    .map(t => {
-      const seats = t.game_state?.seats || [];
-      return {
-        table_id: t.id,
-        status: t.status, // "waiting" | "playing"
-        seats_taken: seats.length,
-        seats_available: 4 - seats.length,
-        seats: seats.map(s => ({
-          seat: s.seat,
-          name: s.name,
-          avatar: s.avatar
-        })),
-        created_date: t.created_date
-      };
-    });
+   const tables = allTables
+     .filter(t => !t.tournament_id && t.status !== 'finished')
+     .sort((a, b) => (a.table_number || 999) - (b.table_number || 999))
+     .map(t => {
+       const seats = t.game_state?.seats || [];
+       return {
+         table_id: t.id,
+         table_number: t.table_number,
+         status: t.status, // "waiting" | "playing"
+         seats_taken: seats.length,
+         seats_available: 4 - seats.length,
+         seats: seats.map(s => ({
+           seat: s.seat,
+           name: s.name,
+           avatar: s.avatar
+         })),
+         created_date: t.created_date
+       };
+     });
 
   return Response.json({ tables });
 });
