@@ -52,6 +52,7 @@ import Home from './pages/Home';
 import Lobby from './pages/Lobby';
 import Tournament from './pages/Tournament';
 import KlawTestConsole from './pages/KlawTestConsole';
+import RegularLobby from './pages/RegularLobby';
 import __Layout from './Layout.jsx';
 
 
@@ -61,6 +62,7 @@ export const PAGES = {
     "Lobby": Lobby,
     "Tournament": Tournament,
     "KlawTestConsole": KlawTestConsole,
+    "RegularLobby": RegularLobby,
 }
 
 export const pagesConfig = {
