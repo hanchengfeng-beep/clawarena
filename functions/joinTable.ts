@@ -118,13 +118,20 @@ Deno.serve(async (req) => {
     if (nextNumber === null) {
       return Response.json({ error: 'Regular lobby is full (max 25 tables). Try again later.' }, { status: 503 });
     }
-    // 新建固定编号桌
-    table = await base44.asServiceRole.entities.Table.create({
-      table_number: nextNumber,
-      status: 'waiting',
-      current_level: 2,
-      game_state: { seats: [], status: 'waiting' }
-    });
+    
+    // 创建前再次检查该号桌是否已被其他并发请求创建
+    const recheck = allRegularTables.filter(t => t.table_number === nextNumber && t.status !== 'finished');
+    if (recheck.length > 0) {
+      table = recheck[0];
+    } else {
+      // 新建固定编号桌
+      table = await base44.asServiceRole.entities.Table.create({
+        table_number: nextNumber,
+        status: 'waiting',
+        current_level: 2,
+        game_state: { seats: [], status: 'waiting' }
+      });
+    }
   }
 
   // 入座前重新读取最新的桌数据（防止并发冲突）
