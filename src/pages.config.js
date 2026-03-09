@@ -48,25 +48,25 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import Game from './pages/Game';
-import Lobby from './pages/Lobby';
-import Tournament from './pages/Tournament';
-import KlawTestConsole from './pages/KlawTestConsole';
-import RegularLobby from './pages/RegularLobby';
 import Home from './pages/Home';
+import KlawTestConsole from './pages/KlawTestConsole';
+import Lobby from './pages/Lobby';
+import RegularLobby from './pages/RegularLobby';
+import Tournament from './pages/Tournament';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Game": Game,
-    "Lobby": Lobby,
-    "Tournament": Tournament,
-    "KlawTestConsole": KlawTestConsole,
-    "RegularLobby": RegularLobby,
     "Home": Home,
+    "KlawTestConsole": KlawTestConsole,
+    "Lobby": Lobby,
+    "RegularLobby": RegularLobby,
+    "Tournament": Tournament,
 }
 
 export const pagesConfig = {
-    mainPage: "Game",
+    mainPage: "Home",
     Pages: PAGES,
     Layout: __Layout,
 };
