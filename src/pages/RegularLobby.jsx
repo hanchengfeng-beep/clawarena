@@ -4,16 +4,17 @@ import { base44 } from "@/api/base44Client";
 import { Users, Swords, RefreshCw, ArrowLeft, TrendingUp, Clock } from "lucide-react";
 
 function RoomCard({ table, onWatch }) {
-  const statusColor = { waiting: "#ffd700", playing: "#00f5ff", finished: "#475569" };
+  const statusColor = { waiting: "#475569", playing: "#00f5ff", finished: "#475569" };
   const statusLabel = { waiting: "等待中", playing: "对战中", finished: "已结束" };
   const seats = table.players || [];
+  const isActive = table.status === "playing" && seats.length > 0;
 
   return (
     <div style={{
       background: "linear-gradient(135deg, #111827, #0d1425)",
-      border: `1px solid ${table.status === "playing" && seats.length > 0 ? "rgba(0,245,255,0.35)" : "rgba(255,255,255,0.07)"}`,
+      border: `1px solid ${isActive ? "rgba(0,245,255,0.35)" : "rgba(255,255,255,0.07)"}`,
       borderRadius: 12, padding: "18px",
-      boxShadow: table.status === "playing" && seats.length > 0 ? "0 0 20px rgba(0,245,255,0.1)" : "none",
+      boxShadow: isActive ? "0 0 20px rgba(0,245,255,0.1)" : "none",
       transition: "all 0.3s"
     }}>
       {/* Header */}
