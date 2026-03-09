@@ -42,7 +42,8 @@ Deno.serve(async (req) => {
   const seats = (table.game_state?.seats || []).filter(s => s.klaw_id !== klawId);
 
   if (seats.length === 0) {
-    // 桌子空了，标记为 finished
+    // 桌子空了，删除该桌（待机桌可重用）
+    // 不删除，标记为finished，让joinTable自动创建新桌而不是重用
     await base44.asServiceRole.entities.Table.update(table.id, {
       status: 'finished',
       game_state: { ...table.game_state, seats: [], status: 'finished' }
