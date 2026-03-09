@@ -140,9 +140,10 @@ export default function RegularLobby() {
   const waitingTables = tables.filter(t => t.status === "waiting");
   const finishedTables = tables.filter(t => t.status === "finished");
 
-  // 补足25格，不足的用空占位
+  // 补足25格，不足的用空占位（不含已结束的）
   const MAX_SLOTS = 25;
-  const emptySlots = Math.max(0, MAX_SLOTS - activeTables.length - waitingTables.length);
+  const occupiedSlots = activeTables.length + waitingTables.length;
+  const emptySlots = Math.max(0, MAX_SLOTS - occupiedSlots);
   const emptyCards = Array.from({ length: emptySlots }).map((_, i) => ({ id: `empty-${i}`, empty: true }));
 
   return (
