@@ -62,49 +62,52 @@ Deno.serve(async (req) => {
   }
 
   let table = null;
-  let tableToJoin = targetTableNumber;
 
-  // 如果指定了桌号，直接查找或创建该桌
-  if (targetTableNumber) {
-    let attempts = 0;
-    const maxAttempts = 10;
+  // 获取或创建该桌号的 TableQueue 记录
+  async function getOrCreateTable(tableNum) {
+    let queue = null;
     
-    while (!table && attempts < maxAttempts) {
-      attempts++;
-      
-      const allTables = await base44.asServiceRole.entities.Table.filter({});
-      const activeOnNumber = allTables.filter(t => t.table_number === targetTableNumber && t.status === 'waiting');
-      
-      if (activeOnNumber.length > 0) {
-        // 找到一个等待中的桌，使用它
-        table = activeOnNumber[0];
-      } else {
-        // 没有等待中的桌，尝试创建一个
-        // 但首先删除所有finished的旧桌（清理）
-        const finished = allTables.filter(t => t.table_number === targetTableNumber && t.status === 'finished');
-        for (const f of finished) {
-          try {
-            await base44.asServiceRole.entities.Table.delete(f.id);
-          } catch (e) {
-            // 忽略
-          }
-        }
-        
-        try {
-          table = await base44.asServiceRole.entities.Table.create({
-            table_number: targetTableNumber,
-            status: 'waiting',
-            current_level: 2,
-            game_state: { seats: [], status: 'waiting' }
-          });
-        } catch (e) {
-          // 创建失败，可能是并发冲突，等待后重试
-          await new Promise(r => setTimeout(r, 20 * attempts));
-          table = null;
-        }
+    // 尝试查找或创建 TableQueue 记录
+    const existing = await base44.asServiceRole.entities.TableQueue.filter({ table_number: tableNum });
+    if (existing.length > 0) {
+      queue = existing[0];
+    } else {
+      try {
+        queue = await base44.asServiceRole.entities.TableQueue.create({ table_number: tableNum });
+      } catch (e) {
+        // 可能被其他请求创建了，再查一次
+        const retry = await base44.asServiceRole.entities.TableQueue.filter({ table_number: tableNum });
+        queue = retry.length > 0 ? retry[0] : null;
       }
     }
     
+    if (!queue) return null;
+    
+    // 如果 queue 中有有效的 table_id，使用它
+    if (queue.active_table_id) {
+      const activeTable = await base44.asServiceRole.entities.Table.get(queue.active_table_id);
+      if (activeTable && activeTable.status === 'waiting') {
+        return activeTable;
+      }
+    }
+    
+    // 否则创建新表
+    const newTable = await base44.asServiceRole.entities.Table.create({
+      table_number: tableNum,
+      status: 'waiting',
+      current_level: 2,
+      game_state: { seats: [], status: 'waiting' }
+    });
+    
+    // 更新 queue 指向新表
+    await base44.asServiceRole.entities.TableQueue.update(queue.id, { active_table_id: newTable.id });
+    
+    return newTable;
+  }
+
+  // 如果指定了桌号，直接查找或创建该桌
+  if (targetTableNumber) {
+    table = await getOrCreateTable(targetTableNumber);
     if (!table) {
       return Response.json({ error: 'Failed to find or create table' }, { status: 503 });
     }
@@ -125,12 +128,8 @@ Deno.serve(async (req) => {
     
     // 还是没找到，创建新桌
     if (!table) {
-      const allRegularTables = await base44.asServiceRole.entities.Table.filter({});
-      const occupiedNumbers = new Set(
-        allRegularTables
-          .filter(t => !t.tournament_id && t.status !== 'finished' && t.table_number >= 1 && t.table_number <= 25)
-          .map(t => t.table_number)
-      );
+      const allQueues = await base44.asServiceRole.entities.TableQueue.filter({});
+      const occupiedNumbers = new Set(allQueues.map(q => q.table_number));
       let nextNumber = null;
       for (let n = 1; n <= 25; n++) {
         if (!occupiedNumbers.has(n)) { nextNumber = n; break; }
@@ -139,15 +138,10 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Regular lobby is full (max 25 tables). Try again later.' }, { status: 503 });
       }
       
-      // 创建前再次检查（防止并发）
-      const freshCheck = await base44.asServiceRole.entities.Table.filter({});
-      const recheckTable = freshCheck.filter(t => t.table_number === nextNumber && t.status !== 'finished');
-      table = recheckTable.length > 0 ? recheckTable[0] : await base44.asServiceRole.entities.Table.create({
-        table_number: nextNumber,
-        status: 'waiting',
-        current_level: 2,
-        game_state: { seats: [], status: 'waiting' }
-      });
+      table = await getOrCreateTable(nextNumber);
+      if (!table) {
+        return Response.json({ error: 'Failed to create table' }, { status: 503 });
+      }
     }
   }
   
