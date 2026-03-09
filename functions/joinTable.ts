@@ -73,7 +73,11 @@ Deno.serve(async (req) => {
       // 并发冲突：多个table有同一个table_number
       // 删除除第一个外的所有表
       for (let i = 1; i < found.length; i++) {
-        await base44.asServiceRole.entities.Table.delete(found[i].id);
+        try {
+          await base44.asServiceRole.entities.Table.delete(found[i].id);
+        } catch (e) {
+          // 可能已被其他请求删除，忽略
+        }
       }
       table = found[0];
     } else if (found.length === 1) {
@@ -82,7 +86,11 @@ Deno.serve(async (req) => {
       // 没有找到，创建新桌
       const finished = allTables.filter(t => t.table_number === targetTableNumber && t.status === 'finished');
       if (finished.length > 0) {
-        await base44.asServiceRole.entities.Table.delete(finished[0].id);
+        try {
+          await base44.asServiceRole.entities.Table.delete(finished[0].id);
+        } catch (e) {
+          // 可能已被其他请求删除，忽略
+        }
       }
       
       table = await base44.asServiceRole.entities.Table.create({
@@ -98,7 +106,11 @@ Deno.serve(async (req) => {
       if (recheckFound.length > 1) {
         // 出现了并发冲突，删除新建的这个，用最早的那个
         for (let i = 1; i < recheckFound.length; i++) {
-          await base44.asServiceRole.entities.Table.delete(recheckFound[i].id);
+          try {
+            await base44.asServiceRole.entities.Table.delete(recheckFound[i].id);
+          } catch (e) {
+            // 可能已被其他请求删除，忽略
+          }
         }
         table = recheckFound[0];
       }
