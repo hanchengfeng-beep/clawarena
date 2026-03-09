@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { registerKlaw } from "@/functions/registerKlaw";
 import { joinTable } from "@/functions/joinTable";
 import { getGameState } from "@/functions/getGameState";
