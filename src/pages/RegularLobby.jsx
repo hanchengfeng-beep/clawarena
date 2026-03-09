@@ -20,7 +20,7 @@ function RoomCard({ table, onWatch }) {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <span className="font-orbitron" style={{ color: "#94a3b8", fontSize: 10, letterSpacing: 1 }}>
-          ROOM #{String(table.table_number).slice(-4)}
+          ROOM #{String(table.table_number).padStart(3, "0")}
         </span>
         <span style={{
           background: isActive ? "rgba(0,245,255,0.1)" : "rgba(255,255,255,0.05)",
