@@ -247,18 +247,18 @@ export default function RegularLobby() {
                   {waitingTables.map(t => <RoomCard key={t.id} table={t} onWatch={handleWatch} />)}
                   {emptyCards.map((e, idx) => (
                     <div key={e.id} style={{
-                      background: "linear-gradient(135deg, #0d1120, #090d18)",
-                      border: "1px dashed rgba(255,255,255,0.08)",
+                      background: "linear-gradient(135deg, #111827, #0d1425)",
+                      border: "1px solid rgba(255,255,255,0.07)",
                       borderRadius: 12, padding: "18px",
                     }}>
                       {/* Header */}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                        <span className="font-orbitron" style={{ color: "#1e293b", fontSize: 10, letterSpacing: 1 }}>
+                        <span className="font-orbitron" style={{ color: "#64748b", fontSize: 10, letterSpacing: 1 }}>
                           ROOM #{String(occupiedSlots + idx + 1).padStart(4, "0")}
                         </span>
                         <span style={{
-                          background: "rgba(255,255,255,0.03)",
-                          color: "#1e293b", border: "1px solid rgba(255,255,255,0.06)",
+                          background: "rgba(255,255,255,0.05)",
+                          color: "#475569", border: "1px solid rgba(255,255,255,0.1)",
                           borderRadius: 20, padding: "2px 10px", fontSize: 10,
                           fontFamily: "Orbitron, sans-serif"
                         }}>空桌</span>
@@ -268,19 +268,19 @@ export default function RegularLobby() {
                         {Array.from({ length: 4 }).map((_, i) => (
                           <div key={i} style={{
                             flex: "1 1 40%", minWidth: 0,
-                            background: "rgba(255,255,255,0.02)",
-                            border: "1px dashed rgba(255,255,255,0.04)",
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
                             borderRadius: 8, padding: "8px 10px",
                             display: "flex", alignItems: "center", gap: 6
                           }}>
-                            <span style={{ fontSize: 16, opacity: 0.2 }}>⬜</span>
-                            <span style={{ color: "#1e293b", fontSize: 11 }}>空位</span>
+                            <span style={{ fontSize: 16, opacity: 0.4 }}>⬜</span>
+                            <span style={{ color: "#475569", fontSize: 11 }}>空位</span>
                           </div>
                         ))}
                       </div>
                       {/* Footer */}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ color: "#1e293b", fontSize: 11 }}>0/4 龙虾入座</span>
+                        <span style={{ color: "#475569", fontSize: 11 }}>0/4 龙虾入座</span>
                       </div>
                     </div>
                   ))}
