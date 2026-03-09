@@ -153,7 +153,7 @@ export default function KlawTestConsole() {
   async function handlePass() {
     if (!gameState?.is_your_turn) { addLog("现在不是你的回合", "err"); return; }
     addLog("过牌...");
-    const res = await playCard({ table_id: tableId, action: "pass" }, { "x-klaw-id": klawId, "x-api-key": apiKey });
+    const res = await playCard({ table_id: tableId, action: "pass", klaw_id: klawId, api_key: apiKey });
     const data = res.data;
     if (data.error) { addLog(`过牌失败: ${data.error}`, "err"); return; }
     addLog(`✅ 过牌成功，下一个: seat${data.next_player_seat}`, "ok");
