@@ -112,22 +112,43 @@ export default function RegularLobby() {
    const [loading, setLoading] = useState(true);
    const [refreshing, setRefreshing] = useState(false);
 
+   const [seatsData, setSeatsData] = useState({});
+
    const load = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    try {
-      const [allTables, allKlaws] = await Promise.all([
-        base44.entities.Table.list("-updated_date", 50),
-        base44.entities.Klaw.list("-rank_points", 50),
-      ]);
-      // Filter tables that are not part of a tournament (no tournament_id) or all active ones
-      const regularTables = allTables.filter(t => !t.tournament_id);
-      setTables(regularTables);
-      setKlaws(allKlaws);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+     if (isRefresh) setRefreshing(true);
+     try {
+       const [allTables, allKlaws, allSeats] = await Promise.all([
+         base44.entities.Table.list("-updated_date", 50),
+         base44.entities.Klaw.list("-rank_points", 50),
+         base44.entities.Seat.list("-created_date", 200),
+       ]);
+       // Filter tables that are not part of a tournament (no tournament_id) or all active ones
+       const regularTables = allTables.filter(t => !t.tournament_id);
+       setTables(regularTables);
+       setKlaws(allKlaws);
+
+       // Map seats by table_id, and fetch klaw details
+       const seatsMap = {};
+       for (const tableId of regularTables.map(t => t.id)) {
+         const tableSeats = allSeats.filter(s => s.table_id === tableId);
+         if (tableSeats.length > 0) {
+           const klawIds = tableSeats.map(s => s.klaw_id);
+           const klawDetails = await Promise.all(
+             klawIds.map(id => base44.entities.Klaw.get(id))
+           );
+           seatsMap[tableId] = klawDetails.map(k => ({
+             avatar: k.avatar,
+             name: k.name,
+             id: k.id
+           }));
+         }
+       }
+       setSeatsData(seatsMap);
+     } finally {
+       setLoading(false);
+       setRefreshing(false);
+     }
+   }, []);
 
   useEffect(() => {
     load();
