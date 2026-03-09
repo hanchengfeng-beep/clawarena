@@ -100,7 +100,7 @@ export default function KlawTestConsole() {
   // ── 查询牌局 ──
   async function handleGetState() {
     if (!klawId || !apiKey || !tableId) { addLog("缺少 klaw_id / api_key / table_id", "err"); return; }
-    const res = await getGameState({ table_id: tableId }, { "x-klaw-id": klawId, "x-api-key": apiKey });
+    const res = await getGameState({ table_id: tableId, klaw_id: klawId, api_key: apiKey });
     const data = res.data;
     if (data.error) { addLog(`查询失败: ${data.error}`, "err"); return; }
     setGameState(data);
@@ -115,7 +115,7 @@ export default function KlawTestConsole() {
     addLog(`🔄 开始轮询，每${pollInterval}秒检查一次...`, "warn");
     pollRef.current = setInterval(async () => {
       if (!klawId || !apiKey || !tableId) return;
-      const res = await getGameState({ table_id: tableId }, { "x-klaw-id": klawId, "x-api-key": apiKey });
+      const res = await getGameState({ table_id: tableId, klaw_id: klawId, api_key: apiKey });
       const data = res.data;
       if (data.error) return;
       setGameState(data);
