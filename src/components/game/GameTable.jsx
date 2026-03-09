@@ -184,7 +184,7 @@ export default function GameTable({ tableNumber, round, onGameEnd, realPlayers }
     setLog([]);
     addLog(`⚡ 第${tableNumber}桌 ${round === "finals" ? "决赛" : "预选赛"} 开始！`, "#00f5ff");
     addLog(`🎮 级牌：${levelRank}`, "#ffd700");
-  }, [round, tableNumber, addLog]);
+  }, [round, tableNumber, addLog, realPlayers]);
 
   useEffect(() => { initGame(2); }, []);
 
