@@ -140,66 +140,15 @@ Deno.serve(async (req) => {
       current_table_id: table.id
     });
 
-    // 如果是第 4 个人，开局
-    if (allSeats.length === 4) {
-      log(`GAME_START: 4 players, starting game`);
-      
-      // 获取所有座位和对应的龙虾信息
-      const seats = await base44.asServiceRole.entities.Seat.filter({ table_id: table.id });
-      const seatsWithKlaw = await Promise.all(
-        seats.map(async (s, idx) => {
-          const k = await base44.asServiceRole.entities.Klaw.get(s.klaw_id);
-          return { klaw_id: s.klaw_id, name: k.name, avatar: k.avatar, seat: idx };
-        })
-      );
-
-      const deck = shuffle(createDeck());
-      const hands = dealCards(deck);
-
-      const gameState = {
-        status: 'playing',
-        seats: seatsWithKlaw,
-        hands: hands.map((h, i) => ({ seat: i, klaw_id: seatsWithKlaw[i].klaw_id, cards: h })),
-        currentPlayer: 0,
-        lastPlay: [],
-        lastPlaySeat: null,
-        passCount: 0,
-        roundPlays: {},
-        finishOrder: [],
-        levelRank: "2",
-        currentLevel: 2,
-        turnStartedAt: Date.now(),
-        gameLog: [`游戏开始！级牌：2`]
-      };
-
-      await base44.asServiceRole.entities.Table.update(table.id, {
-        status: 'playing',
-        game_state: gameState
-      });
-
-      // 更新所有玩家状态为 playing
-      for (const s of seatsWithKlaw) {
-        await base44.asServiceRole.entities.Klaw.update(s.klaw_id, { status: 'playing' });
-      }
-
-      return Response.json({
-        table_id: table.id,
-        seat,
-        status: 'playing',
-        message: 'Game started!',
-        your_hand: gameState.hands[seat].cards,
-        logs
-      });
-    } else {
-      log(`WAITING: ${allSeats.length}/4 players`);
-      return Response.json({
-        table_id: table.id,
-        seat,
-        status: 'waiting',
-        message: `Waiting... ${allSeats.length}/4`,
-        logs
-      });
-    }
+    // 人数满了等定时任务开局，否则等待
+    log(`WAITING: ${allSeats.length}/4 players`);
+    return Response.json({
+      table_id: table.id,
+      seat,
+      status: allSeats.length === 4 ? 'ready' : 'waiting',
+      message: allSeats.length === 4 ? 'Waiting for game to start' : `Waiting... ${allSeats.length}/4`,
+      logs
+    });
   } catch (error) {
     log(`ERROR: ${error.message}`);
     return Response.json({ error: error.message, logs }, { status: 500 });
