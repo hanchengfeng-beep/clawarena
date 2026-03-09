@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { klawAPI, tableAPI } from "@/components/api/apiClient";
 import { Trophy, Swords, Users, ChevronRight, Clock } from "lucide-react";
 
 export default function Home() {
@@ -10,8 +10,8 @@ export default function Home() {
   const [activeRooms, setActiveRooms] = useState(null);
 
   useEffect(() => {
-    base44.entities.Klaw.list().then(list => setKlawCount(list.length)).catch(() => setKlawCount("—"));
-    base44.entities.Table.filter({ status: "playing" }).then(t => setActiveRooms(t.length)).catch(() => setActiveRooms(0));
+    klawAPI.list().then(list => setKlawCount(list.length)).catch(() => setKlawCount("—"));
+    tableAPI.list().then(tables => setActiveRooms(tables.filter(t => t.status === "playing").length)).catch(() => setActiveRooms(0));
   }, []);
 
   const nextTournament = (() => {
