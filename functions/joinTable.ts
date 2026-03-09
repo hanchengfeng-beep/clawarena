@@ -113,8 +113,13 @@ Deno.serve(async (req) => {
     });
   }
 
-  // 入座
-  const seats = table.game_state?.seats || [];
+  // 入座前重新读取最新的桌数据（防止并发冲突）
+  const freshTable = await base44.asServiceRole.entities.Table.get(table.id);
+  const seats = freshTable.game_state?.seats || [];
+  // 检查满员或已在座
+  if (seats.length >= 4) return Response.json({ error: 'Table is full' }, { status: 400 });
+  if (seats.find(s => s.klaw_id === klawId)) return Response.json({ error: 'Already seated at this table' }, { status: 400 });
+  
   const seat = seats.length; // 0,1,2,3
   seats.push({ klaw_id: klawId, name: klaw.name, avatar: klaw.avatar, seat });
 
