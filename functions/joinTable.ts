@@ -68,6 +68,14 @@ Deno.serve(async (req) => {
   });
 
   if (!table) {
+    // 检查常规赛桌子总数限制（不含锦标赛桌）
+    const allRegularTables = await base44.asServiceRole.entities.Table.filter({ status: 'waiting' });
+    const regularCount = allRegularTables.filter(t => !t.tournament_id).length;
+    const playingCount = (await base44.asServiceRole.entities.Table.filter({ status: 'playing' }))
+      .filter(t => !t.tournament_id).length;
+    if (regularCount + playingCount >= 25) {
+      return Response.json({ error: 'Regular lobby is full (max 25 tables). Try again later.' }, { status: 503 });
+    }
     // 新建一桌
     table = await base44.asServiceRole.entities.Table.create({
       table_number: Date.now(),
