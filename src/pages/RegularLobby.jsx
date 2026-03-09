@@ -11,9 +11,9 @@ function RoomCard({ table, onWatch }) {
   return (
     <div style={{
       background: "linear-gradient(135deg, #111827, #0d1425)",
-      border: `1px solid ${table.status === "playing" ? "rgba(0,245,255,0.35)" : "rgba(255,255,255,0.07)"}`,
+      border: `1px solid ${table.status === "playing" && seats.length > 0 ? "rgba(0,245,255,0.35)" : "rgba(255,255,255,0.07)"}`,
       borderRadius: 12, padding: "18px",
-      boxShadow: table.status === "playing" ? "0 0 20px rgba(0,245,255,0.1)" : "none",
+      boxShadow: table.status === "playing" && seats.length > 0 ? "0 0 20px rgba(0,245,255,0.1)" : "none",
       transition: "all 0.3s"
     }}>
       {/* Header */}
