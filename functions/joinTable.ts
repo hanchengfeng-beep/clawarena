@@ -108,45 +108,49 @@ Deno.serve(async (req) => {
 
   log(`TABLE_SELECTED: ${table.id} (#${table.table_number})`);
 
-  // 尝试在该表插入 Seat 记录
-  log(`TRY_INSERT_SEAT: Inserting seat record...`);
-  let seat = null;
+  // 直接操作 Table.players 数组
+  log(`TRY_ADD_PLAYER: Adding player to table...`);
   try {
-    const seatRecord = await base44.asServiceRole.entities.Seat.create({
-      table_id: table.id,
-      klaw_id: klawId
-    });
-    log(`SEAT_INSERTED: ${seatRecord.id}`);
+    // 检查玩家是否已在此表中
+    const currentPlayers = table.players || [];
+    if (currentPlayers.some(p => p.id === klawId)) {
+      log(`ERROR: Klaw already at this table`);
+      return Response.json({ error: 'Already at this table', logs }, { status: 400 });
+    }
 
-    // 查询当前表的所有座位（按创建时间排序）
-    const allSeats = await base44.asServiceRole.entities.Seat.filter({ table_id: table.id });
-    log(`SEATS_COUNT: ${allSeats.length}`);
-
-    // 如果超过 4 个座位，说明有人并发加入，忽略最后一个（当前请求）
-    if (allSeats.length > 4) {
-      log(`TOO_MANY_SEATS: ${allSeats.length} > 4, ignoring this seat`);
-      // 删除当前插入的座位
-      await base44.asServiceRole.entities.Seat.delete(seatRecord.id);
+    // 如果表满了，拒绝
+    if (currentPlayers.length >= 4) {
+      log(`ERROR: Table is full`);
       return Response.json({ error: 'Table is full, try another table', logs }, { status: 400 });
     }
 
-    // 分配座位号
-    seat = allSeats.length - 1; // 当前插入是第 N 个，座位号是 N-1
-    log(`SEAT_NUMBER: ${seat}`);
+    // 添加玩家到表
+    const newPlayers = [...currentPlayers, {
+      id: klawId,
+      name: klaw.name,
+      avatar: klaw.avatar,
+      type: 'ai'
+    }];
 
-    // 更新 Klaw 状态
+    // 更新表和龙虾状态
+    await base44.asServiceRole.entities.Table.update(table.id, {
+      players: newPlayers
+    });
+
     await base44.asServiceRole.entities.Klaw.update(klawId, {
       status: 'waiting',
       current_table_id: table.id
     });
 
-    // 人数满了等定时任务开局，否则等待
-    log(`WAITING: ${allSeats.length}/4 players`);
+    const seatNumber = newPlayers.length - 1;
+    log(`PLAYER_ADDED: ${klaw.name}, seat=${seatNumber}, total=${newPlayers.length}/4`);
+
+    // 如果4人齐，返回 ready，否则等待
     return Response.json({
       table_id: table.id,
-      seat,
-      status: allSeats.length === 4 ? 'ready' : 'waiting',
-      message: allSeats.length === 4 ? 'Waiting for game to start' : `Waiting... ${allSeats.length}/4`,
+      seat: seatNumber,
+      status: newPlayers.length === 4 ? 'ready' : 'waiting',
+      message: newPlayers.length === 4 ? 'All players ready, game starting...' : `Waiting... ${newPlayers.length}/4`,
       logs
     });
   } catch (error) {
