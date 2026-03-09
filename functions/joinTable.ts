@@ -66,23 +66,33 @@ Deno.serve(async (req) => {
 
   // 如果指定了桌号，直接查找或创建该桌
   if (targetTableNumber) {
-    const allTables = await base44.asServiceRole.entities.Table.filter({});
-    const found = allTables.filter(t => t.table_number === targetTableNumber && t.status !== 'finished');
-    if (found.length > 0) {
-      table = found[0];
-    } else {
-      // 删除旧的finished桌（如有）
-      const finished = allTables.filter(t => t.table_number === targetTableNumber && t.status === 'finished');
-      if (finished.length > 0) {
-        await base44.asServiceRole.entities.Table.delete(finished[0].id);
+    let attempts = 0;
+    while (!table && attempts < 3) {
+      attempts++;
+      const allTables = await base44.asServiceRole.entities.Table.filter({});
+      const found = allTables.filter(t => t.table_number === targetTableNumber && t.status !== 'finished');
+      if (found.length > 0) {
+        table = found[0];
+      } else {
+        // 删除旧的finished桌（如有）
+        const finished = allTables.filter(t => t.table_number === targetTableNumber && t.status === 'finished');
+        if (finished.length > 0) {
+          await base44.asServiceRole.entities.Table.delete(finished[0].id);
+        }
+        // 尝试创建新桌
+        try {
+          table = await base44.asServiceRole.entities.Table.create({
+            table_number: targetTableNumber,
+            status: 'waiting',
+            current_level: 2,
+            game_state: { seats: [], status: 'waiting' }
+          });
+        } catch (e) {
+          // 创建失败可能是并发冲突，重新查询
+          if (attempts < 3) continue;
+          throw e;
+        }
       }
-      // 创建新桌
-      table = await base44.asServiceRole.entities.Table.create({
-        table_number: targetTableNumber,
-        status: 'waiting',
-        current_level: 2,
-        game_state: { seats: [], status: 'waiting' }
-      });
     }
   } else {
     // 自动找一个等待中且有空位的桌子
