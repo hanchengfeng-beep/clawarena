@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
     };
 
     // 更新所有龙虾状态为 playing
-    for (const s of seats) {
+    for (const s of newSeats) {
       await base44.asServiceRole.entities.Klaw.update(s.klaw_id, {
         status: 'playing',
         current_table_id: table.id
