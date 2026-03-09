@@ -127,6 +127,8 @@ export default function GameTable({ tableNumber, round, onGameEnd, realPlayers }
   const [speed, setSpeed] = useState(800);
   const intervalRef = useRef(null);
   const logRef = useRef(null);
+  const [playerTimer, setPlayerTimer] = useState(30); // 30秒超时
+  const timerRef = useRef(null);
 
   const addLog = useCallback((msg, color = "#e2e8f0") => {
     setLog(prev => [...prev.slice(-40), { msg, color, id: Date.now() + Math.random() }]);
