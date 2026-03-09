@@ -1,10 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
 export default function PageNotFound() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me()
+      .then(user => setIsAdmin(user?.role === "admin"))
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   const pageName = location.pathname.split("/").pop() || "unknown";
 

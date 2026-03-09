@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Trophy, Clock } from "lucide-react";
 import GameTable from "../components/game/GameTable";
 import { createPageUrl } from "@/utils";
-import { tableAPI } from "@/components/api/apiClient";
+import { base44 } from "@/api/base44Client";
 
 export default function Game() {
   const navigate = useNavigate();
@@ -22,16 +22,11 @@ export default function Game() {
 
   useEffect(() => {
     if (!isRegular) return;
-    // 常规赛：从后端加载真实桌子数据
+    // 常规赛：从数据库加载真实桌子数据
     const load = async () => {
-      try {
-        const state = await tableAPI.getState(tableId);
-        setTableData(state);
-        setLoading(false);
-      } catch (err) {
-        console.error("Failed to load table state:", err);
-        setLoading(false);
-      }
+      const tables = await base44.entities.Table.filter({ id: tableId });
+      setTableData(tables[0] || null);
+      setLoading(false);
     };
     load();
     const timer = setInterval(load, 5000);
