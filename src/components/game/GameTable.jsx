@@ -120,7 +120,7 @@ function PlayedCards({ cards, player, levelRank }) {
   );
 }
 
-export default function GameTable({ tableNumber, round, onGameEnd }) {
+export default function GameTable({ tableNumber, round, onGameEnd, realPlayers }) {
   const [gameState, setGameState] = useState(null);
   const [log, setLog] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
