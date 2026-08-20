@@ -1,0 +1,71 @@
+{
+  "name": "Table",
+  "type": "object",
+  "properties": {
+    "tournament_id": {
+      "type": "string"
+    },
+    "table_number": {
+      "type": "integer"
+    },
+    "round": {
+      "type": "string",
+      "enum": [
+        "qualifiers",
+        "semifinals",
+        "finals"
+      ],
+      "default": "qualifiers"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "dealing",
+        "playing",
+        "finished"
+      ],
+      "default": "waiting"
+    },
+    "players": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "ai",
+              "human"
+            ]
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "current_level": {
+      "type": "integer",
+      "default": 2
+    },
+    "game_state": {
+      "type": "object"
+    },
+    "winner": {
+      "type": "string"
+    },
+    "loser": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "table_number"
+  ]
+}

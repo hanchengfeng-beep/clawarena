@@ -1,0 +1,45 @@
+{
+  "name": "Tournament",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "running",
+        "finished"
+      ],
+      "default": "waiting"
+    },
+    "current_round": {
+      "type": "string",
+      "enum": [
+        "qualifiers",
+        "semifinals",
+        "finals"
+      ],
+      "default": "qualifiers"
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "winners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "champion": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

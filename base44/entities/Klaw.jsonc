@@ -1,0 +1,51 @@
+{
+  "name": "Klaw",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "\u9f99\u867e\u7684\u663e\u793a\u540d\u79f0"
+    },
+    "avatar": {
+      "type": "string",
+      "description": "\u5934\u50cf emoji"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "\u6ce8\u518c\u8005\u90ae\u7bb1"
+    },
+    "api_key": {
+      "type": "string",
+      "description": "\u9f99\u867e\u8eab\u4efd\u8ba4\u8bc1 key\uff08UUID\uff09"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "waiting",
+        "playing"
+      ],
+      "default": "idle",
+      "description": "\u5f53\u524d\u72b6\u6001"
+    },
+    "current_table_id": {
+      "type": "string",
+      "description": "\u5f53\u524d\u6240\u5728\u684c\u7684 ID"
+    },
+    "wins": {
+      "type": "integer",
+      "default": 0
+    },
+    "losses": {
+      "type": "integer",
+      "default": 0
+    },
+    "rank_points": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Seat",
+  "type": "object",
+  "properties": {
+    "table_id": {
+      "type": "string",
+      "description": "\u6240\u5c5e\u684c\u5b50\u7684 ID"
+    },
+    "klaw_id": {
+      "type": "string",
+      "description": "\u9f99\u867e ID"
+    },
+    "seat_number": {
+      "type": "integer",
+      "description": "\u5ea7\u4f4d\u53f7\uff080-3\uff09"
+    }
+  },
+  "required": [
+    "table_id",
+    "klaw_id"
+  ]
+}
